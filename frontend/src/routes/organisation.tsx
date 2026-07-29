@@ -343,9 +343,7 @@ function OrganisationConsole() {
                         {d.proof!.flagged && (
                           <span className="mt-1 block text-[11px] leading-snug text-flagged">
                             Automated check:{" "}
-                            {d.proof!.aiInternalNote ??
-                              d.proof!.aiReason ??
-                              "flagged for human review."}
+                            {d.proof!.aiReason ?? "flagged for human review."}
                           </span>
                         )}
                       </Td>
@@ -451,13 +449,13 @@ function InvitePanel({ orgId }: { orgId: string }) {
     }
   }
 
-  function onCreate(e: React.FormEvent) {
+  async function onCreate(e: React.FormEvent) {
     e.preventDefault();
     if (!project.trim()) {
       toast.error("Name the project or disbursement this slot is for.");
       return;
     }
-    const invite = createInvite({
+    const invite = await createInvite({
       orgId,
       projectLabel: project,
       amount: Number(amount) || undefined,
@@ -569,8 +567,8 @@ function InvitePanel({ orgId }: { orgId: string }) {
                 {!used && (
                   <button
                     type="button"
-                    onClick={() => {
-                      revokeInvite(i.code);
+                    onClick={async () => {
+                      await revokeInvite(i.code);
                       toast.success("Invite revoked");
                     }}
                     className="inline-flex items-center gap-1.5 rounded-full border border-input px-3 py-1.5 text-xs font-medium text-flagged transition-colors hover:bg-accent"

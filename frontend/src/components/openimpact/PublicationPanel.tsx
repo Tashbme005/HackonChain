@@ -164,8 +164,8 @@ export function PublicationPanel({ orgId }: { orgId: string }) {
                         <button
                           type="button"
                           aria-label="Remove publication proof"
-                          onClick={() => {
-                            removePublicationProof(d.id);
+                          onClick={async () => {
+                            await removePublicationProof(d.id);
                             toast("Publication proof removed — this donation is pending again.");
                           }}
                           className="text-muted-foreground transition-colors hover:text-flagged"
@@ -186,8 +186,8 @@ export function PublicationPanel({ orgId }: { orgId: string }) {
         <PublicationForm
           key={openFor}
           onCancel={() => setOpenFor(null)}
-          onSubmit={(draft) => {
-            attachPublicationProof(openFor, { ...draft, submittedBy: org?.name });
+          onSubmit={async (draft) => {
+            await attachPublicationProof(openFor, { ...draft, submittedBy: org?.name });
             setOpenFor(null);
             toast.success("Publication proof filed — this donation now shows as Published.");
           }}
@@ -204,7 +204,7 @@ function PublicationForm({
   onCancel,
 }: {
   donationId: string;
-  onSubmit: (draft: { url: string; type: PublicationType; caption?: string }) => void;
+  onSubmit: (draft: { url: string; type: PublicationType; caption?: string }) => void | Promise<void>;
   onCancel: () => void;
 }) {
   const [url, setUrl] = useState("");
@@ -213,14 +213,14 @@ function PublicationForm({
 
   return (
     <form
-      onSubmit={(e) => {
+      onSubmit={async (e) => {
         e.preventDefault();
         const clean = url.trim();
         if (!/^https?:\/\/\S+\.\S+/.test(clean)) {
           toast.error("Add a full public link, starting with https://");
           return;
         }
-        onSubmit({ url: clean, type, caption: caption.trim() || undefined });
+        await onSubmit({ url: clean, type, caption: caption.trim() || undefined });
       }}
       className="mt-4 border border-border bg-card p-5"
     >

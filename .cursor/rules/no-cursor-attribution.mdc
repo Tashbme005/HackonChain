@@ -1,0 +1,21 @@
+---
+description: Never add Cursor co-author or attribution trailers to git commits or PRs
+alwaysApply: true
+---
+
+# No Cursor commit attribution
+
+Never add any Cursor / AI attribution to git commits, pull requests, or commit messages.
+
+Forbidden in commits and PRs:
+- `Co-authored-by: Cursor <cursoragent@cursor.com>`
+- Any other `Co-authored-by:` line for Cursor / cursoragent
+- `Made-with: Cursor`
+- `--trailer` flags that attribute work to Cursor
+
+When creating commits:
+- Use only the author identity already configured in git (`user.name` / `user.email`)
+- Pass the commit message via HEREDOC with no attribution trailers
+- Do not use `git commit --trailer` for Cursor attribution
+
+If the environment still injects a Cursor trailer after commit, strip it before pushing (amend only when amend rules allow; otherwise create a new cleaned commit or rewrite as the user requests).

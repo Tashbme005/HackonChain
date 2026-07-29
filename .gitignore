@@ -5,3 +5,13 @@ dist/
 *.local
 .env
 .env.*
+!.env.example
+
+# Cursor IDE junk — keep versioned project rules
+.cursor/*
+!.cursor/rules/
+!.cursor/rules/**
+
+# Supabase local
+backend/supabase/.branches
+backend/supabase/.temp
