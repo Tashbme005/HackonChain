@@ -1,6 +1,7 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 
+import { BrandLockup } from "@/components/openimpact/BrandLogo";
 import { ROLE_HOME, useLedger } from "@/lib/openimpact/store";
 import { connectWallet, shortAddress } from "@/lib/openimpact/web3";
 import { cn } from "@/lib/utils";
@@ -41,19 +42,10 @@ export function SiteHeader() {
     navigate({ to: "/auth", replace: true });
   }
 
-
   return (
     <header className="sticky top-0 z-30 border-b border-border bg-paper/90 backdrop-blur">
       <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-6 gap-y-3 px-5 py-3.5">
-        <Link to="/" className="flex items-center gap-2">
-          <span
-            className="grid size-7 place-items-center rounded-full border-2 border-dashed border-verified"
-            aria-hidden
-          >
-            <span className="size-2 rounded-full bg-verified" />
-          </span>
-          <span className="text-lg font-semibold tracking-tight">openImpact</span>
-        </Link>
+        <BrandLockup />
 
         <nav aria-label="Main" className="order-3 flex w-full gap-5 text-sm sm:order-none sm:w-auto">
           {PUBLIC_LINKS.map((l) => (
@@ -116,7 +108,6 @@ export function SiteHeader() {
             </Link>
           )}
         </div>
-
       </div>
     </header>
   );
@@ -125,10 +116,11 @@ export function SiteHeader() {
 export function SiteFooter() {
   return (
     <footer className="mt-20 border-t border-border">
-      <div className="mx-auto flex max-w-6xl flex-wrap gap-x-10 gap-y-3 px-5 py-8 text-sm text-muted-foreground">
-        <p className="w-full sm:w-auto sm:flex-1">
-          openImpact — a receipt for every donation. Prototype data; no funds move on chain yet.
-        </p>
+      <div className="mx-auto flex max-w-6xl flex-wrap items-center gap-x-10 gap-y-3 px-5 py-8 text-sm text-muted-foreground">
+        <div className="w-full sm:w-auto sm:flex-1">
+          <BrandLockup showTagline className="mb-2 w-fit" />
+          <p>A receipt for every donation. Prototype data; no funds move on chain yet.</p>
+        </div>
         <Link to="/how-it-works" className="hover:text-foreground">
           How it works
         </Link>
