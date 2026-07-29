@@ -12,6 +12,7 @@ import {
   recipientPublicLabel,
 } from "@/lib/openimpact/types";
 import type { PublicationType } from "@/lib/openimpact/types";
+import { submitPublicationHashOnChain } from "@/lib/openimpact/web3";
 
 const TYPES = Object.keys(PUBLICATION_TYPE_LABEL) as PublicationType[];
 
@@ -187,6 +188,7 @@ export function PublicationPanel({ orgId }: { orgId: string }) {
           key={openFor}
           onCancel={() => setOpenFor(null)}
           onSubmit={async (draft) => {
+            await submitPublicationHashOnChain(openFor, draft);
             await attachPublicationProof(openFor, { ...draft, submittedBy: org?.name });
             setOpenFor(null);
             toast.success("Publication proof filed — this donation now shows as Published.");

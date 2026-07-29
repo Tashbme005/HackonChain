@@ -5,7 +5,14 @@ import { ArrowRight, Loader2, Play, RotateCcw, Wand2 } from "lucide-react";
 import { StampBadge } from "@/components/openimpact/StampBadge";
 import { formatAmount, useLedger } from "@/lib/openimpact/store";
 import { recipientPublicLabel, shortWallet } from "@/lib/openimpact/types";
-import { mockTxHash, submitToChain } from "@/lib/openimpact/web3";
+import {
+  confirmReceiptOnChain,
+  createDonationOnChain,
+  isContractConfigured,
+  mockTxHash,
+  rememberOnChainDonationId,
+  submitProofHashOnChain,
+} from "@/lib/openimpact/web3";
 
 /**
  * Guided, no-account preview of the whole OpenImpact loop for hackathon judges.
@@ -115,22 +122,25 @@ export function DemoSimulator() {
     try {
       if (step === 1) {
         const id = `dn-demo-${Date.now().toString(36)}`;
-        const txHash = await submitToChain({
-          demo: true,
-          orgId: org.id,
-          recipientId: recipient.id,
-          amount: script.amount,
-        }).catch(() => mockTxHash());
+        const result = await createDonationOnChain({
+          organisation: org.walletAddress,
+          recipient: recipient.walletAddress,
+          amountEth: script.amount,
+        }).catch(() => ({ txHash: mockTxHash(), onChainDonationId: undefined as string | undefined }));
+        if (result.onChainDonationId) {
+          rememberOnChainDonationId(id, result.onChainDonationId);
+        }
         const saved = await addDonation({
           id,
           donorName: "Demo Visitor",
           isPublic: true,
           amount: script.amount,
-          currency: "USDC",
+          currency: isContractConfigured() ? "ETH" : "USDC",
           recipientId: recipient.id,
           orgId: org.id,
           status: "pending",
-          txHash,
+          txHash: result.txHash,
+          onChainDonationId: result.onChainDonationId,
           timestamp: new Date().toISOString(),
           note: script.donorNote,
           proof: null,
@@ -138,9 +148,15 @@ export function DemoSimulator() {
         setDonationId(saved.id);
       } else if (step === 2 && donationId) {
         await wait(600);
+        await confirmReceiptOnChain(donationId);
         await confirmReceipt(donationId);
       } else if (step === 3 && donationId) {
         await wait(700);
+        await submitProofHashOnChain(donationId, {
+          photoUrl: org.imageUrl,
+          description: script.description,
+          testimonial: script.testimonial,
+        });
         await attachProofToDonation(donationId, {
           photoUrl: org.imageUrl,
           description: script.description,
