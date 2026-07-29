@@ -8,179 +8,167 @@
 // You should NOT make any changes in this file as it will be overwritten.
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
-import { Route as rootRouteImport } from './routes/__root'
-import { Route as TrustRouteImport } from './routes/trust'
-import { Route as SitemapDotxmlRouteImport } from './routes/sitemap[.]xml'
-import { Route as RecipientRouteImport } from './routes/recipient'
-import { Route as OrganisationRouteImport } from './routes/organisation'
-import { Route as LinkOrgRouteImport } from './routes/link-org'
-import { Route as HowItWorksRouteImport } from './routes/how-it-works'
-import { Route as DonorRouteImport } from './routes/donor'
-import { Route as AuthRouteImport } from './routes/auth'
-import { Route as AboutRouteImport } from './routes/about'
-import { Route as IndexRouteImport } from './routes/index'
-import { Route as ProofDonationIdRouteImport } from './routes/proof.$donationId'
-import { Route as DonateRecipientIdRouteImport } from './routes/donate.$recipientId'
-import { Route as CauseOrgIdRouteImport } from './routes/cause.$orgId'
+import { Route as rootRouteImport } from "./routes/__root"
+import { Route as IndexRouteImport } from "./routes/index"
+import { Route as AboutRouteImport } from "./routes/about"
+import { Route as AuthRouteImport } from "./routes/auth"
+import { Route as DonorRouteImport } from "./routes/donor"
+import { Route as HowItWorksRouteImport } from "./routes/how-it-works"
+import { Route as LinkOrgRouteImport } from "./routes/link-org"
+import { Route as OrganisationRouteImport } from "./routes/organisation"
+import { Route as RecipientRouteImport } from "./routes/recipient"
+import { Route as TrustRouteImport } from "./routes/trust"
+import { Route as CauseOrgIdRouteImport } from "./routes/cause.$orgId"
+import { Route as DonateRecipientIdRouteImport } from "./routes/donate.$recipientId"
+import { Route as ProofDonationIdRouteImport } from "./routes/proof.$donationId"
 
-const TrustRoute = TrustRouteImport.update({
-  id: '/trust',
-  path: '/trust',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const SitemapDotxmlRoute = SitemapDotxmlRouteImport.update({
-  id: '/sitemap.xml',
-  path: '/sitemap.xml',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const RecipientRoute = RecipientRouteImport.update({
-  id: '/recipient',
-  path: '/recipient',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const OrganisationRoute = OrganisationRouteImport.update({
-  id: '/organisation',
-  path: '/organisation',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const LinkOrgRoute = LinkOrgRouteImport.update({
-  id: '/link-org',
-  path: '/link-org',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const HowItWorksRoute = HowItWorksRouteImport.update({
-  id: '/how-it-works',
-  path: '/how-it-works',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const DonorRoute = DonorRouteImport.update({
-  id: '/donor',
-  path: '/donor',
-  getParentRoute: () => rootRouteImport,
-} as any)
-const AuthRoute = AuthRouteImport.update({
-  id: '/auth',
-  path: '/auth',
+const IndexRoute = IndexRouteImport.update({
+  id: "/",
+  path: "/",
   getParentRoute: () => rootRouteImport,
 } as any)
 const AboutRoute = AboutRouteImport.update({
-  id: '/about',
-  path: '/about',
+  id: "/about",
+  path: "/about",
   getParentRoute: () => rootRouteImport,
 } as any)
-const IndexRoute = IndexRouteImport.update({
-  id: '/',
-  path: '/',
+const AuthRoute = AuthRouteImport.update({
+  id: "/auth",
+  path: "/auth",
   getParentRoute: () => rootRouteImport,
 } as any)
-const ProofDonationIdRoute = ProofDonationIdRouteImport.update({
-  id: '/proof/$donationId',
-  path: '/proof/$donationId',
+const DonorRoute = DonorRouteImport.update({
+  id: "/donor",
+  path: "/donor",
   getParentRoute: () => rootRouteImport,
 } as any)
-const DonateRecipientIdRoute = DonateRecipientIdRouteImport.update({
-  id: '/donate/$recipientId',
-  path: '/donate/$recipientId',
+const HowItWorksRoute = HowItWorksRouteImport.update({
+  id: "/how-it-works",
+  path: "/how-it-works",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const LinkOrgRoute = LinkOrgRouteImport.update({
+  id: "/link-org",
+  path: "/link-org",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const OrganisationRoute = OrganisationRouteImport.update({
+  id: "/organisation",
+  path: "/organisation",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const RecipientRoute = RecipientRouteImport.update({
+  id: "/recipient",
+  path: "/recipient",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const TrustRoute = TrustRouteImport.update({
+  id: "/trust",
+  path: "/trust",
   getParentRoute: () => rootRouteImport,
 } as any)
 const CauseOrgIdRoute = CauseOrgIdRouteImport.update({
-  id: '/cause/$orgId',
-  path: '/cause/$orgId',
+  id: "/cause/$orgId",
+  path: "/cause/$orgId",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const DonateRecipientIdRoute = DonateRecipientIdRouteImport.update({
+  id: "/donate/$recipientId",
+  path: "/donate/$recipientId",
+  getParentRoute: () => rootRouteImport,
+} as any)
+const ProofDonationIdRoute = ProofDonationIdRouteImport.update({
+  id: "/proof/$donationId",
+  path: "/proof/$donationId",
   getParentRoute: () => rootRouteImport,
 } as any)
 
 export interface FileRoutesByFullPath {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/auth': typeof AuthRoute
-  '/donor': typeof DonorRoute
-  '/how-it-works': typeof HowItWorksRoute
-  '/link-org': typeof LinkOrgRoute
-  '/organisation': typeof OrganisationRoute
-  '/recipient': typeof RecipientRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/trust': typeof TrustRoute
-  '/cause/$orgId': typeof CauseOrgIdRoute
-  '/donate/$recipientId': typeof DonateRecipientIdRoute
-  '/proof/$donationId': typeof ProofDonationIdRoute
+  "/": typeof IndexRoute
+  "/about": typeof AboutRoute
+  "/auth": typeof AuthRoute
+  "/donor": typeof DonorRoute
+  "/how-it-works": typeof HowItWorksRoute
+  "/link-org": typeof LinkOrgRoute
+  "/organisation": typeof OrganisationRoute
+  "/recipient": typeof RecipientRoute
+  "/trust": typeof TrustRoute
+  "/cause/$orgId": typeof CauseOrgIdRoute
+  "/donate/$recipientId": typeof DonateRecipientIdRoute
+  "/proof/$donationId": typeof ProofDonationIdRoute
 }
 export interface FileRoutesByTo {
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/auth': typeof AuthRoute
-  '/donor': typeof DonorRoute
-  '/how-it-works': typeof HowItWorksRoute
-  '/link-org': typeof LinkOrgRoute
-  '/organisation': typeof OrganisationRoute
-  '/recipient': typeof RecipientRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/trust': typeof TrustRoute
-  '/cause/$orgId': typeof CauseOrgIdRoute
-  '/donate/$recipientId': typeof DonateRecipientIdRoute
-  '/proof/$donationId': typeof ProofDonationIdRoute
+  "/": typeof IndexRoute
+  "/about": typeof AboutRoute
+  "/auth": typeof AuthRoute
+  "/donor": typeof DonorRoute
+  "/how-it-works": typeof HowItWorksRoute
+  "/link-org": typeof LinkOrgRoute
+  "/organisation": typeof OrganisationRoute
+  "/recipient": typeof RecipientRoute
+  "/trust": typeof TrustRoute
+  "/cause/$orgId": typeof CauseOrgIdRoute
+  "/donate/$recipientId": typeof DonateRecipientIdRoute
+  "/proof/$donationId": typeof ProofDonationIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
-  '/': typeof IndexRoute
-  '/about': typeof AboutRoute
-  '/auth': typeof AuthRoute
-  '/donor': typeof DonorRoute
-  '/how-it-works': typeof HowItWorksRoute
-  '/link-org': typeof LinkOrgRoute
-  '/organisation': typeof OrganisationRoute
-  '/recipient': typeof RecipientRoute
-  '/sitemap.xml': typeof SitemapDotxmlRoute
-  '/trust': typeof TrustRoute
-  '/cause/$orgId': typeof CauseOrgIdRoute
-  '/donate/$recipientId': typeof DonateRecipientIdRoute
-  '/proof/$donationId': typeof ProofDonationIdRoute
+  "/": typeof IndexRoute
+  "/about": typeof AboutRoute
+  "/auth": typeof AuthRoute
+  "/donor": typeof DonorRoute
+  "/how-it-works": typeof HowItWorksRoute
+  "/link-org": typeof LinkOrgRoute
+  "/organisation": typeof OrganisationRoute
+  "/recipient": typeof RecipientRoute
+  "/trust": typeof TrustRoute
+  "/cause/$orgId": typeof CauseOrgIdRoute
+  "/donate/$recipientId": typeof DonateRecipientIdRoute
+  "/proof/$donationId": typeof ProofDonationIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths:
-    | '/'
-    | '/about'
-    | '/auth'
-    | '/donor'
-    | '/how-it-works'
-    | '/link-org'
-    | '/organisation'
-    | '/recipient'
-    | '/sitemap.xml'
-    | '/trust'
-    | '/cause/$orgId'
-    | '/donate/$recipientId'
-    | '/proof/$donationId'
+    | "/"
+    | "/about"
+    | "/auth"
+    | "/donor"
+    | "/how-it-works"
+    | "/link-org"
+    | "/organisation"
+    | "/recipient"
+    | "/trust"
+    | "/cause/$orgId"
+    | "/donate/$recipientId"
+    | "/proof/$donationId"
   fileRoutesByTo: FileRoutesByTo
   to:
-    | '/'
-    | '/about'
-    | '/auth'
-    | '/donor'
-    | '/how-it-works'
-    | '/link-org'
-    | '/organisation'
-    | '/recipient'
-    | '/sitemap.xml'
-    | '/trust'
-    | '/cause/$orgId'
-    | '/donate/$recipientId'
-    | '/proof/$donationId'
+    | "/"
+    | "/about"
+    | "/auth"
+    | "/donor"
+    | "/how-it-works"
+    | "/link-org"
+    | "/organisation"
+    | "/recipient"
+    | "/trust"
+    | "/cause/$orgId"
+    | "/donate/$recipientId"
+    | "/proof/$donationId"
   id:
-    | '__root__'
-    | '/'
-    | '/about'
-    | '/auth'
-    | '/donor'
-    | '/how-it-works'
-    | '/link-org'
-    | '/organisation'
-    | '/recipient'
-    | '/sitemap.xml'
-    | '/trust'
-    | '/cause/$orgId'
-    | '/donate/$recipientId'
-    | '/proof/$donationId'
+    | "__root__"
+    | "/"
+    | "/about"
+    | "/auth"
+    | "/donor"
+    | "/how-it-works"
+    | "/link-org"
+    | "/organisation"
+    | "/recipient"
+    | "/trust"
+    | "/cause/$orgId"
+    | "/donate/$recipientId"
+    | "/proof/$donationId"
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -192,104 +180,96 @@ export interface RootRouteChildren {
   LinkOrgRoute: typeof LinkOrgRoute
   OrganisationRoute: typeof OrganisationRoute
   RecipientRoute: typeof RecipientRoute
-  SitemapDotxmlRoute: typeof SitemapDotxmlRoute
   TrustRoute: typeof TrustRoute
   CauseOrgIdRoute: typeof CauseOrgIdRoute
   DonateRecipientIdRoute: typeof DonateRecipientIdRoute
   ProofDonationIdRoute: typeof ProofDonationIdRoute
 }
 
-declare module '@tanstack/react-router' {
+declare module "@tanstack/react-router" {
   interface FileRoutesByPath {
-    '/trust': {
-      id: '/trust'
-      path: '/trust'
-      fullPath: '/trust'
-      preLoaderRoute: typeof TrustRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/sitemap.xml': {
-      id: '/sitemap.xml'
-      path: '/sitemap.xml'
-      fullPath: '/sitemap.xml'
-      preLoaderRoute: typeof SitemapDotxmlRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/recipient': {
-      id: '/recipient'
-      path: '/recipient'
-      fullPath: '/recipient'
-      preLoaderRoute: typeof RecipientRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/organisation': {
-      id: '/organisation'
-      path: '/organisation'
-      fullPath: '/organisation'
-      preLoaderRoute: typeof OrganisationRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/link-org': {
-      id: '/link-org'
-      path: '/link-org'
-      fullPath: '/link-org'
-      preLoaderRoute: typeof LinkOrgRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/how-it-works': {
-      id: '/how-it-works'
-      path: '/how-it-works'
-      fullPath: '/how-it-works'
-      preLoaderRoute: typeof HowItWorksRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/donor': {
-      id: '/donor'
-      path: '/donor'
-      fullPath: '/donor'
-      preLoaderRoute: typeof DonorRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/auth': {
-      id: '/auth'
-      path: '/auth'
-      fullPath: '/auth'
-      preLoaderRoute: typeof AuthRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/about': {
-      id: '/about'
-      path: '/about'
-      fullPath: '/about'
-      preLoaderRoute: typeof AboutRouteImport
-      parentRoute: typeof rootRouteImport
-    }
-    '/': {
-      id: '/'
-      path: '/'
-      fullPath: '/'
+    "/": {
+      id: "/"
+      path: "/"
+      fullPath: "/"
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/proof/$donationId': {
-      id: '/proof/$donationId'
-      path: '/proof/$donationId'
-      fullPath: '/proof/$donationId'
-      preLoaderRoute: typeof ProofDonationIdRouteImport
+    "/about": {
+      id: "/about"
+      path: "/about"
+      fullPath: "/about"
+      preLoaderRoute: typeof AboutRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/donate/$recipientId': {
-      id: '/donate/$recipientId'
-      path: '/donate/$recipientId'
-      fullPath: '/donate/$recipientId'
+    "/auth": {
+      id: "/auth"
+      path: "/auth"
+      fullPath: "/auth"
+      preLoaderRoute: typeof AuthRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/donor": {
+      id: "/donor"
+      path: "/donor"
+      fullPath: "/donor"
+      preLoaderRoute: typeof DonorRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/how-it-works": {
+      id: "/how-it-works"
+      path: "/how-it-works"
+      fullPath: "/how-it-works"
+      preLoaderRoute: typeof HowItWorksRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/link-org": {
+      id: "/link-org"
+      path: "/link-org"
+      fullPath: "/link-org"
+      preLoaderRoute: typeof LinkOrgRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/organisation": {
+      id: "/organisation"
+      path: "/organisation"
+      fullPath: "/organisation"
+      preLoaderRoute: typeof OrganisationRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/recipient": {
+      id: "/recipient"
+      path: "/recipient"
+      fullPath: "/recipient"
+      preLoaderRoute: typeof RecipientRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/trust": {
+      id: "/trust"
+      path: "/trust"
+      fullPath: "/trust"
+      preLoaderRoute: typeof TrustRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/cause/$orgId": {
+      id: "/cause/$orgId"
+      path: "/cause/$orgId"
+      fullPath: "/cause/$orgId"
+      preLoaderRoute: typeof CauseOrgIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
+    "/donate/$recipientId": {
+      id: "/donate/$recipientId"
+      path: "/donate/$recipientId"
+      fullPath: "/donate/$recipientId"
       preLoaderRoute: typeof DonateRecipientIdRouteImport
       parentRoute: typeof rootRouteImport
     }
-    '/cause/$orgId': {
-      id: '/cause/$orgId'
-      path: '/cause/$orgId'
-      fullPath: '/cause/$orgId'
-      preLoaderRoute: typeof CauseOrgIdRouteImport
+    "/proof/$donationId": {
+      id: "/proof/$donationId"
+      path: "/proof/$donationId"
+      fullPath: "/proof/$donationId"
+      preLoaderRoute: typeof ProofDonationIdRouteImport
       parentRoute: typeof rootRouteImport
     }
   }
@@ -304,7 +284,6 @@ const rootRouteChildren: RootRouteChildren = {
   LinkOrgRoute: LinkOrgRoute,
   OrganisationRoute: OrganisationRoute,
   RecipientRoute: RecipientRoute,
-  SitemapDotxmlRoute: SitemapDotxmlRoute,
   TrustRoute: TrustRoute,
   CauseOrgIdRoute: CauseOrgIdRoute,
   DonateRecipientIdRoute: DonateRecipientIdRoute,

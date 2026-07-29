@@ -39,11 +39,6 @@ export function shortAddress(address: string): string {
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
 
-/**
- * AI counterfeit check for a proof-of-use upload. Runs server-side through
- * Lovable AI (Gemini) — see `proof-check.functions.ts`. Never throws: if the
- * check can't run, the submission passes through marked as unchecked.
- */
 export async function runAiProofCheck(proof: {
   photoUrl: string;
   description: string;
@@ -54,14 +49,12 @@ export async function runAiProofCheck(proof: {
 }): Promise<{ flagged: boolean; reason?: string; internalNote?: string; checked: boolean }> {
   try {
     const res = await checkProofAuthenticity({
-      data: {
-        image: proof.photoUrl,
-        description: proof.description,
-        testimonial: proof.testimonial ?? "",
-        amount: proof.amount,
-        currency: proof.currency,
-        seenBefore: Boolean(proof.seenBefore),
-      },
+      image: proof.photoUrl,
+      description: proof.description,
+      testimonial: proof.testimonial ?? "",
+      amount: proof.amount,
+      currency: proof.currency,
+      seenBefore: Boolean(proof.seenBefore),
     });
     return {
       flagged: res.verdict === "flagged",
