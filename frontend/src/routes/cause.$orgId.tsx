@@ -37,7 +37,7 @@ function CausePage() {
 
   if (!org) {
     return (
-      <div className="mx-auto max-w-2xl px-5 py-24 text-center text-muted-foreground">
+      <div className="page-shell-narrow page-top max-w-2xl pb-24 text-center text-muted-foreground">
         We don't have a cause with that address.{" "}
         <Link to="/" className="underline">
           Back to all causes
@@ -57,7 +57,7 @@ function CausePage() {
   return (
     <div>
       <section className="border-b border-border">
-        <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
+        <div className="page-shell page-top grid gap-8 pb-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
           <div>
             <Breadcrumbs
               crumbs={[
@@ -108,7 +108,7 @@ function CausePage() {
         </div>
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 py-14">
+      <section className="page-shell pb-14">
         <h2 className="text-3xl">People funded through {org.name}</h2>
         {org.recipientIds.length === 0 ? (
           <p className="mt-6 border border-dashed border-input p-8 text-center text-muted-foreground">
@@ -152,7 +152,7 @@ function CausePage() {
         )}
       </section>
 
-      <section className="mx-auto max-w-6xl px-5 pb-4">
+      <section className="page-shell pb-4">
         <h2 className="text-3xl">How {org.name} shared this work</h2>
         <p className="mt-2 max-w-xl text-muted-foreground">
           Organisations on OpenImpact must publicise the impact of every donation somewhere public —
@@ -201,7 +201,7 @@ function CausePage() {
       </section>
 
       {(org.generalProofs ?? []).length > 0 && (
-        <section className="mx-auto max-w-6xl px-5 pb-4">
+        <section className="page-shell pb-4">
           <h2 className="text-3xl">Notes from the field</h2>
           <p className="mt-2 max-w-xl text-muted-foreground">
             General updates from the people {org.name} works with — not tied to any one donation.
@@ -234,7 +234,7 @@ function CausePage() {
         </section>
       )}
 
-      <section className="mx-auto max-w-6xl px-5 pb-16">
+      <section className="page-shell pb-16">
         <h2 className="text-3xl">Recent receipts</h2>
         <p className="mt-2 max-w-xl text-muted-foreground">
           Every donation to this cause, newest first, with whatever proof has come back so far.

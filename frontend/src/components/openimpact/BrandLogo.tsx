@@ -23,7 +23,14 @@ export function BrandMark({
     >
       <title>{title}</title>
       <rect width="64" height="64" rx="15" fill="currentColor" />
-      <circle cx="32" cy="32" r="15" fill="none" stroke="#F4F6F5" strokeWidth="5" />
+      <circle
+        cx="32"
+        cy="32"
+        r="15"
+        fill="none"
+        stroke="#F4F6F5"
+        strokeWidth="5"
+      />
       <rect x="29" y="12" width="6" height="40" rx="3" fill="#F4F6F5" />
     </svg>
   );
@@ -32,7 +39,12 @@ export function BrandMark({
 /** Wordmark: Open (ink) + Impact (verified), Fraunces display. */
 export function BrandWordmark({ className }: { className?: string }) {
   return (
-    <span className={cn("font-display text-lg font-semibold tracking-tight", className)}>
+    <span
+      className={cn(
+        "font-display text-lg font-semibold tracking-tight",
+        className,
+      )}
+    >
       <span className="text-ink">Open</span>
       <span className="text-verified">Impact</span>
     </span>

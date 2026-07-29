@@ -49,7 +49,7 @@ function ProofPage() {
 
   if (!donation || !recipient) {
     return (
-      <div className="mx-auto max-w-2xl px-5 py-24 text-center text-muted-foreground">
+      <div className="page-shell-narrow page-top max-w-2xl pb-24 text-center text-muted-foreground">
         That receipt doesn't exist.{" "}
         <Link to="/donor" className="underline">
           Back to your donations
@@ -65,7 +65,7 @@ function ProofPage() {
   }
 
   return (
-    <div className="mx-auto max-w-2xl px-5 py-12">
+    <div className="page-shell-narrow page-top max-w-2xl pb-12">
       <Breadcrumbs
         crumbs={[
           { label: "Causes", to: "/" },

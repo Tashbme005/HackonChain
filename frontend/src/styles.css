@@ -137,6 +137,41 @@
     border-color: var(--color-border);
   }
 
+  html {
+    scrollbar-width: thin;
+    scrollbar-color: color-mix(in oklab, var(--color-ink) 45%, transparent)
+      transparent;
+  }
+
+  /* Transparent track; theme-tinted thumb */
+  *::-webkit-scrollbar {
+    width: 10px;
+    height: 10px;
+  }
+
+  *::-webkit-scrollbar-track {
+    background: transparent;
+  }
+
+  *::-webkit-scrollbar-thumb {
+    background-color: color-mix(in oklab, var(--color-ink) 40%, transparent);
+    border-radius: 999px;
+    border: 2px solid transparent;
+    background-clip: padding-box;
+  }
+
+  *::-webkit-scrollbar-thumb:hover {
+    background-color: color-mix(
+      in oklab,
+      var(--color-verified) 70%,
+      var(--color-ink)
+    );
+  }
+
+  *::-webkit-scrollbar-corner {
+    background: transparent;
+  }
+
   body {
     background-color: var(--color-background);
     color: var(--color-foreground);
@@ -161,10 +196,16 @@
 /* --- Signature: receipt paper --- */
 @utility receipt-edge {
   /* perforated torn top edge */
-  -webkit-mask-image: radial-gradient(circle 5px at 8px -1px,
-      transparent 0 5px,
-      black 5.5px);
-  mask-image: radial-gradient(circle 5px at 8px -1px, transparent 0 5px, black 5.5px);
+  -webkit-mask-image: radial-gradient(
+    circle 5px at 8px -1px,
+    transparent 0 5px,
+    black 5.5px
+  );
+  mask-image: radial-gradient(
+    circle 5px at 8px -1px,
+    transparent 0 5px,
+    black 5.5px
+  );
   -webkit-mask-size: 16px 100%;
   mask-size: 16px 100%;
   -webkit-mask-repeat: repeat-x;
@@ -179,6 +220,80 @@
   font-family: var(--font-mono);
   font-variant-numeric: tabular-nums;
   letter-spacing: -0.01em;
+}
+
+/** Horizontal page gutter — keep content off screen edges on all breakpoints. */
+@utility page-x {
+  padding-inline: 1.25rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.75rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2.5rem;
+  }
+
+  @media (width >= 80rem) {
+    padding-inline: 3rem;
+  }
+}
+
+/** Standard content column (wide screens use more of the viewport). */
+@utility page-shell {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 90rem;
+  padding-inline: 1.25rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.75rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2.5rem;
+  }
+
+  @media (width >= 80rem) {
+    padding-inline: 3rem;
+  }
+}
+
+/** Narrow reading / form column. */
+@utility page-shell-narrow {
+  margin-inline: auto;
+  width: 100%;
+  max-width: 48rem;
+  padding-inline: 1.25rem;
+
+  @media (width >= 40rem) {
+    padding-inline: 1.75rem;
+  }
+
+  @media (width >= 64rem) {
+    padding-inline: 2.5rem;
+  }
+}
+
+/** Hide scrollbars while keeping scroll/swipe. */
+@utility hide-scrollbar {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
+    width: 0;
+    height: 0;
+  }
+}
+
+/** Clears the fixed header. */
+@utility page-top {
+  padding-top: 5.5rem;
+
+  @media (width >= 40rem) {
+    padding-top: 6.5rem;
+  }
 }
 
 @keyframes stamp-in {
@@ -202,8 +317,39 @@
   animation: stamp-in 420ms cubic-bezier(0.22, 1, 0.36, 1);
 }
 
-@media (prefers-reduced-motion: reduce) {
+/* Scrollbar: transparent track, keep only the thumb */
+* {
+  scrollbar-width: thin;
+  scrollbar-color: color-mix(in oklab, var(--color-ink) 35%, transparent) transparent;
+}
 
+*::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+*::-webkit-scrollbar-track {
+  background: transparent;
+}
+
+*::-webkit-scrollbar-thumb {
+  background-color: color-mix(in oklab, var(--color-ink) 35%, transparent);
+  border-radius: 9999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+*::-webkit-scrollbar-thumb:hover {
+  background-color: color-mix(in oklab, var(--color-ink) 50%, transparent);
+}
+
+*::-webkit-scrollbar-button {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
   *,
   *::before,
   *::after {

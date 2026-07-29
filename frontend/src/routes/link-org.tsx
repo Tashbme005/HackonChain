@@ -57,7 +57,7 @@ function LinkOrgPage() {
   }
 
   return (
-    <div className="mx-auto max-w-5xl px-5 py-12">
+    <div className="page-shell page-top max-w-5xl pb-12">
       <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
         Recipient setup · step 2 of 2
       </p>

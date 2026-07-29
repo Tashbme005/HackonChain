@@ -105,7 +105,7 @@ function AuthPage() {
   // ── Path 1: invite link — simplified, org already attached ─────────
   if (inviteValid) {
     return (
-      <div className="mx-auto max-w-xl px-5 py-14">
+      <div className="page-shell-narrow page-top max-w-xl pb-14">
         <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
           Recipient slot · {invite!.code}
         </p>
@@ -195,7 +195,7 @@ function AuthPage() {
       : null;
 
   return (
-    <div className="mx-auto max-w-6xl px-5 py-12">
+    <div className="page-shell page-top pb-12">
       <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
         Sign in · OpenImpact
       </p>
