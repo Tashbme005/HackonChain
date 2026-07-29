@@ -3,13 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/how-it-works")({
   head: () => ({
     meta: [
-      { title: "How OpenImpact works — donate, confirm, prove, verify" },
+      { title: "OpenImpact" },
       {
         name: "description",
         content:
           "A step-by-step walkthrough of an OpenImpact donation, written for people who have never used a crypto wallet: donate, the recipient confirms, they show proof, you verify it.",
       },
-      { property: "og:title", content: "How OpenImpact works" },
+      { property: "og:title", content: "OpenImpact" },
       {
         property: "og:description",
         content: "Donate, confirm, prove, verify — four steps, no crypto jargon.",

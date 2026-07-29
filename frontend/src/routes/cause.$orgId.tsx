@@ -14,13 +14,13 @@ import { shortAddress } from "@/lib/openimpact/web3";
 export const Route = createFileRoute("/cause/$orgId")({
   head: () => ({
     meta: [
-      { title: "Cause page — OpenImpact" },
+      { title: "OpenImpact" },
       {
         name: "description",
         content:
           "An organisation's public page: what they do, their proof-of-use score, the people they fund, and every recent receipt with proof attached.",
       },
-      { property: "og:title", content: "Cause page — OpenImpact" },
+      { property: "og:title", content: "OpenImpact" },
       {
         property: "og:description",
         content: "Trust score, funded recipients and recent proof-of-use receipts.",

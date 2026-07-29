@@ -9,13 +9,13 @@ import { shortAddress } from "@/lib/openimpact/web3";
 export const Route = createFileRoute("/donor")({
   head: () => ({
     meta: [
-      { title: "Donor profile — your donations and their receipts" },
+      { title: "OpenImpact" },
       {
         name: "description",
         content:
           "The donor's seat: your wallet, your giving history as receipt cards, and the current status and proof of use behind every donation you've made.",
       },
-      { property: "og:title", content: "Donor profile — OpenImpact" },
+      { property: "og:title", content: "OpenImpact" },
       {
         property: "og:description",
         content: "Total given, causes supported, and a verified receipt for each donation.",
