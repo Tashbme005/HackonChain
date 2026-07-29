@@ -5,3 +5,8 @@ dist/
 *.local
 .env
 .env.*
+!.env.example
+
+# Supabase local
+backend/supabase/.branches
+backend/supabase/.temp

@@ -67,7 +67,7 @@ function AuthPage() {
     navigate({ to: ROLE_HOME[r] });
   }
 
-  function onSubmit(e: React.FormEvent) {
+  async function onSubmit(e: React.FormEvent) {
     e.preventDefault();
     setError(null);
     // A claimed slot is always a recipient signup, even if local state hydrated
@@ -75,14 +75,14 @@ function AuthPage() {
     const effectiveRole: Role = inviteValid ? "recipient" : role;
     const res =
       mode === "signup"
-        ? signUp({
+        ? await signUp({
             name,
             email,
             password,
             role: effectiveRole,
             inviteCode: inviteValid ? invite!.code : undefined,
           })
-        : signIn(email, password);
+        : await signIn(email, password);
     if (!res.ok) {
       setError(res.error);
       return;
@@ -96,8 +96,8 @@ function AuthPage() {
     go(res.role);
   }
 
-  function onDemo(r: Role) {
-    signInDemo(r);
+  async function onDemo(r: Role) {
+    await signInDemo(r);
     toast.success(`Demo ${r} account opened`);
     go(r);
   }
@@ -332,7 +332,9 @@ function AuthPage() {
               {mode === "signup" ? "Create account" : "Sign in"}
             </button>
             <p className="text-xs text-muted-foreground">
-              Prototype auth — accounts live in this browser only. No funds move on chain yet.
+              {import.meta.env.VITE_SUPABASE_URL
+                ? "Auth is backed by Supabase. No funds move on chain yet."
+                : "Prototype auth — accounts live in this browser only until Supabase env is set. No funds move on chain yet."}
             </p>
           </form>
         </section>

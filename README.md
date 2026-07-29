@@ -6,6 +6,7 @@ A transparent donation accountability platform that tracks every donation from d
 
 ```
 frontend/          React + Vite SPA (TanStack Router, Tailwind CSS, shadcn/ui)
+backend/           Supabase (Postgres schema, RLS, Edge Functions) — see backend/README.md
 docs/              Product requirements, build prompts, and diagrams
 LICENSE            MIT
 CONTRIBUTING.md    How to contribute
@@ -91,6 +92,8 @@ openImpact treats every donation as a receipt you can verify:
 
 - [`docs/donor-accountability-requirements.md`](docs/donor-accountability-requirements.md) — full requirements, personas, user stories, and MVP scope
 - [`docs/lovable-build-prompt.md`](docs/lovable-build-prompt.md) — original UI/design direction and build prompt
+- [`docs/backend.md`](docs/backend.md) — Supabase backend plan (schema, RLS, auth, AI edge function)
+- [`backend/README.md`](backend/README.md) — how to run migrations and wire `VITE_SUPABASE_*`
 
 ## License
 

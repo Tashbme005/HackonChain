@@ -14,6 +14,16 @@ import {
 import { mockTxHash } from "./web3";
 import type { Donation, Organisation, ProofOfUse, PublicationProof, Recipient } from "./types";
 import { isFullyAccounted } from "./types";
+import { isSupabaseConfigured } from "@/lib/supabase/client";
+import {
+  getSessionProfile,
+  onAuthChange,
+  signInDemoWithSupabase,
+  signInWithSupabase,
+  signOutSupabase,
+  signUpWithSupabase,
+  type AuthProfile,
+} from "@/lib/supabase/auth";
 
 const STORAGE_KEY = "openimpact.state.v8";
 
@@ -38,6 +48,21 @@ export interface Account {
   location?: string;
   /** Recipient / organisation record this account drives. */
   entityId?: string;
+}
+
+function profileToAccount(p: AuthProfile): Account {
+  return {
+    id: p.id,
+    email: p.email,
+    password: "",
+    name: p.name,
+    role: p.role,
+    isDemo: p.isDemo,
+    createdAt: p.createdAt,
+    walletAddress: p.walletAddress ?? "",
+    location: p.location ?? undefined,
+    entityId: p.entityId,
+  };
 }
 
 /** Pre-populated accounts a judge can log straight into. */
@@ -147,9 +172,12 @@ interface LedgerValue extends LedgerState {
     /** Invite code (recipient path 1) or chosen org (recipient path 2). */
     inviteCode?: string;
     orgId?: string;
-  }) => { ok: true; role: Role } | { ok: false; error: string };
-  signIn: (email: string, password: string) => { ok: true; role: Role } | { ok: false; error: string };
-  signInDemo: (role: Role) => Role;
+  }) => Promise<{ ok: true; role: Role } | { ok: false; error: string }>;
+  signIn: (
+    email: string,
+    password: string,
+  ) => Promise<{ ok: true; role: Role } | { ok: false; error: string }>;
+  signInDemo: (role: Role) => Promise<Role>;
   signOut: () => void;
   setDonorIsPublic: (v: boolean) => void;
   setWalletAddress: (address: string | null) => void;
@@ -227,19 +255,53 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LedgerState>(initialState);
   const [hydrated, setHydrated] = useState(false);
 
-  // Hydrate after mount so SSR markup stays stable.
+  // Hydrate after mount. Prefer Supabase session when configured; else localStorage mock.
   useEffect(() => {
-    try {
-      const raw = window.localStorage.getItem(STORAGE_KEY);
-      if (raw) setState({ ...initialState, ...(JSON.parse(raw) as LedgerState) });
-    } catch {
-      /* ignore corrupt local state */
-    }
-    setHydrated(true);
+    let unsub = () => {};
+    (async () => {
+      try {
+        if (isSupabaseConfigured()) {
+          const profile = await getSessionProfile();
+          if (profile) {
+            const account = profileToAccount(profile);
+            setState((s) => ({
+              ...s,
+              accounts: s.accounts.some((a) => a.id === account.id)
+                ? s.accounts.map((a) => (a.id === account.id ? account : a))
+                : [...s.accounts, account],
+              sessionId: account.id,
+              walletAddress: account.walletAddress || s.walletAddress,
+            }));
+          }
+          unsub = onAuthChange((next) => {
+            if (!next) {
+              setState((s) => ({ ...s, sessionId: null }));
+              return;
+            }
+            const account = profileToAccount(next);
+            setState((s) => ({
+              ...s,
+              accounts: s.accounts.some((a) => a.id === account.id)
+                ? s.accounts.map((a) => (a.id === account.id ? account : a))
+                : [...s.accounts, account],
+              sessionId: account.id,
+              walletAddress: account.walletAddress || s.walletAddress,
+            }));
+          });
+        } else {
+          const raw = window.localStorage.getItem(STORAGE_KEY);
+          if (raw) setState({ ...initialState, ...(JSON.parse(raw) as LedgerState) });
+        }
+      } catch {
+        /* ignore corrupt local state / missing supabase */
+      }
+      setHydrated(true);
+    })();
+    return () => unsub();
   }, []);
 
   useEffect(() => {
-    if (!hydrated) return;
+    if (!hydrated || isSupabaseConfigured()) return;
     try {
       window.localStorage.setItem(STORAGE_KEY, JSON.stringify(state));
     } catch {
@@ -344,15 +406,37 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  /** Mock signup: creates the account plus the record its dashboard reads from. */
+  /** Sign-up: Supabase Auth + complete_signup RPC when configured; else local mock. */
   const signUp = useCallback<LedgerValue["signUp"]>(
-    ({ name, email, password, role, inviteCode, orgId }) => {
+    async ({ name, email, password, role, inviteCode, orgId }) => {
       const cleanEmail = email.trim().toLowerCase();
       if (!name.trim()) return { ok: false as const, error: "Please add your name." };
       if (!cleanEmail.includes("@"))
         return { ok: false as const, error: "That email doesn't look right." };
       if (password.length < 6)
         return { ok: false as const, error: "Use at least 6 characters for your password." };
+
+      if (isSupabaseConfigured()) {
+        const res = await signUpWithSupabase({
+          name,
+          email: cleanEmail,
+          password,
+          role,
+          inviteCode,
+          orgId,
+        });
+        if (!res.ok) return res;
+        const account = profileToAccount(res.profile);
+        setState((s) => ({
+          ...s,
+          accounts: s.accounts.some((a) => a.id === account.id)
+            ? s.accounts.map((a) => (a.id === account.id ? account : a))
+            : [...s.accounts, account],
+          sessionId: account.id,
+          walletAddress: account.walletAddress || s.walletAddress,
+        }));
+        return { ok: true as const, role: account.role };
+      }
 
       let failure: string | null = null;
       setState((s) => {
@@ -382,42 +466,41 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
         const invite = inviteCode
           ? s.invites.find((i) => i.code === inviteCode && !i.usedByAccountId)
           : undefined;
-        // Both recipient paths converge here: invite link or self-selected org.
         const linkedOrgId = role === "recipient" ? (invite?.orgId ?? orgId) : undefined;
 
         const recipients =
           role === "recipient"
             ? [
-              ...s.recipients,
-              {
-                id: account.entityId!,
-                name: account.name,
-                pseudonym,
-                orgId: linkedOrgId,
-                story: "Tell donors what you're raising for — you can edit this any time.",
-                walletAddress: wallet,
-                proofOfUse: null,
-                reputationScore: 50,
-              } satisfies Recipient,
-            ]
+                ...s.recipients,
+                {
+                  id: account.entityId!,
+                  name: account.name,
+                  pseudonym,
+                  orgId: linkedOrgId,
+                  story: "Tell donors what you're raising for — you can edit this any time.",
+                  walletAddress: wallet,
+                  proofOfUse: null,
+                  reputationScore: 50,
+                } satisfies Recipient,
+              ]
             : s.recipients;
 
         let organisations =
           role === "organisation"
             ? [
-              ...s.organisations,
-              {
-                id: account.entityId!,
-                name: account.name,
+                ...s.organisations,
+                {
+                  id: account.entityId!,
+                  name: account.name,
                   tagline: "A new organisation on openImpact",
-                description:
-                  "Add a description of your work so donors know what their money pays for.",
-                imageUrl: "",
-                walletAddress: wallet,
-                reputationScore: 50,
-                recipientIds: [],
-              } satisfies Organisation,
-            ]
+                  description:
+                    "Add a description of your work so donors know what their money pays for.",
+                  imageUrl: "",
+                  walletAddress: wallet,
+                  reputationScore: 50,
+                  recipientIds: [],
+                } satisfies Organisation,
+              ]
             : s.organisations;
 
         if (linkedOrgId) {
@@ -428,19 +511,18 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
           );
         }
 
-        // Claiming a slot records ONLY the pseudonym + wallet against it.
         const invites = invite
           ? s.invites.map((i) =>
-            i.code === invite.code
-              ? {
-                ...i,
-                usedByAccountId: id,
-                claimedPseudonym: pseudonym,
-                claimedWallet: wallet,
-                claimedAt: new Date().toISOString(),
-              }
-              : i,
-          )
+              i.code === invite.code
+                ? {
+                    ...i,
+                    usedByAccountId: id,
+                    claimedPseudonym: pseudonym,
+                    claimedWallet: wallet,
+                    claimedAt: new Date().toISOString(),
+                  }
+                : i,
+            )
           : s.invites;
 
         return {
@@ -502,7 +584,22 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
   }, []);
 
 
-  const signIn = useCallback<LedgerValue["signIn"]>((email, password) => {
+  const signIn = useCallback<LedgerValue["signIn"]>(async (email, password) => {
+    if (isSupabaseConfigured()) {
+      const res = await signInWithSupabase(email, password);
+      if (!res.ok) return res;
+      const account = profileToAccount(res.profile);
+      setState((s) => ({
+        ...s,
+        accounts: s.accounts.some((a) => a.id === account.id)
+          ? s.accounts.map((a) => (a.id === account.id ? account : a))
+          : [...s.accounts, account],
+        sessionId: account.id,
+        walletAddress: account.walletAddress || s.walletAddress,
+      }));
+      return { ok: true as const, role: account.role };
+    }
+
     const cleanEmail = email.trim().toLowerCase();
     const match = state.accounts.find(
       (a) => a.email.toLowerCase() === cleanEmail && a.password === password,
@@ -512,13 +609,33 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
     return { ok: true as const, role: match.role };
   }, [state.accounts]);
 
-  const signInDemo = useCallback((role: Role) => {
+  const signInDemo = useCallback(async (role: Role) => {
+    if (isSupabaseConfigured()) {
+      const res = await signInDemoWithSupabase(role);
+      if (res.ok) {
+        const account = profileToAccount(res.profile);
+        setState((s) => ({
+          ...s,
+          accounts: s.accounts.some((a) => a.id === account.id)
+            ? s.accounts.map((a) => (a.id === account.id ? account : a))
+            : [...s.accounts, account],
+          sessionId: account.id,
+          walletAddress: account.walletAddress || s.walletAddress,
+        }));
+        return account.role;
+      }
+      // Demo Auth users may not exist yet — fall through to local mock seats.
+      console.warn("[auth] Supabase demo sign-in failed, using local demo seat:", res.error);
+    }
     const demo = DEMO_ACCOUNTS.find((a) => a.role === role)!;
     setState((s) => ({ ...s, sessionId: demo.id }));
     return role;
   }, []);
 
   const signOut = useCallback(() => {
+    if (isSupabaseConfigured()) {
+      void signOutSupabase();
+    }
     setState((s) => ({ ...s, sessionId: null }));
   }, []);
 
