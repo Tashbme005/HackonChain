@@ -8,7 +8,7 @@ import { recipientPublicLabel, shortWallet } from "@/lib/openimpact/types";
 import { mockTxHash, submitToChain } from "@/lib/openimpact/web3";
 
 /**
- * Guided, no-account preview of the whole openImpact loop for hackathon judges.
+ * Guided, no-account preview of the whole OpenImpact loop for hackathon judges.
  * Everything here is scripted mock data — it deliberately looks like a preview
  * panel, not the real product surface.
  */

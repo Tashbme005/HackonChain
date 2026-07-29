@@ -1,4 +1,4 @@
-# Contributing to HackonChain — openImpact
+# Contributing to HackonChain — OpenImpact
 
 Thanks for your interest in contributing! This guide covers how to get involved during (and after) the hackathon.
 

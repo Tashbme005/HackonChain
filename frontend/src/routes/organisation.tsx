@@ -27,7 +27,7 @@ export const Route = createFileRoute("/organisation")({
         content:
           "The organisation's seat: incoming donations beside outgoing disbursements, every linked recipient's status, and the public summary card donors see.",
       },
-      { property: "og:title", content: "Organisation console — openImpact" },
+      { property: "og:title", content: "Organisation console — OpenImpact" },
       {
         property: "og:description",
         content: "Money in, money out, and who proved what — scannable at a glance.",
