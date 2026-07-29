@@ -3,10 +3,10 @@ import { ArrowUpRight } from "lucide-react";
 import type { ReactNode } from "react";
 
 import { StampBadge, StatusPill } from "./StampBadge";
-import { formatAmount, formatStamp, useLedger } from "@/lib/trustflow/store";
-import { shortAddress } from "@/lib/trustflow/web3";
-import type { Donation } from "@/lib/trustflow/types";
-import { recipientPublicLabel } from "@/lib/trustflow/types";
+import { formatAmount, formatStamp, useLedger } from "@/lib/openimpact/store";
+import { shortAddress } from "@/lib/openimpact/web3";
+import type { Donation } from "@/lib/openimpact/types";
+import { hasDonorOnlyShare, recipientPublicLabel } from "@/lib/openimpact/types";
 import { cn } from "@/lib/utils";
 
 export function ReceiptShell({
@@ -92,8 +92,14 @@ export function ReceiptCard({
                 {proof.aiReason ?? "Our automated check flagged this submission for review."}
               </p>
             )}
+            {hasDonorOnlyShare(proof) && (
+              <p className="mt-2 text-xs text-verified">
+                Includes private contact details shared with you only — open the receipt to view.
+              </p>
+            )}
             <p className="data-mono mt-2 text-[11px] text-muted-foreground">
-              {recipientPublicLabel(recipient, "Recipient")} → {donation.isPublic ? donation.donorName : "Anonymous"}
+              {recipientPublicLabel(recipient, "Recipient")} →{" "}
+              {donation.isPublic ? donation.donorName : "Anonymous"}
             </p>
 
           </>

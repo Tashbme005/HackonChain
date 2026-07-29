@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * TrustFlow — "Open Ledger" design system.
+ * openImpact — "Open Ledger" design system.
  * Paper-light surfaces, ink teal-navy text, mono for verifiable data.
  * All colors in oklch. Never hardcode colors in components.
  */
@@ -161,11 +161,9 @@
 /* --- Signature: receipt paper --- */
 @utility receipt-edge {
   /* perforated torn top edge */
-  -webkit-mask-image: radial-gradient(
-    circle 5px at 8px -1px,
-    transparent 0 5px,
-    black 5.5px
-  );
+  -webkit-mask-image: radial-gradient(circle 5px at 8px -1px,
+      transparent 0 5px,
+      black 5.5px);
   mask-image: radial-gradient(circle 5px at 8px -1px, transparent 0 5px, black 5.5px);
   -webkit-mask-size: 16px 100%;
   mask-size: 16px 100%;
@@ -188,10 +186,12 @@
     transform: scale(0.6) rotate(-14deg);
     opacity: 0;
   }
+
   60% {
     transform: scale(1.08) rotate(3deg);
     opacity: 1;
   }
+
   100% {
     transform: scale(1) rotate(0deg);
     opacity: 1;
@@ -203,6 +203,7 @@
 }
 
 @media (prefers-reduced-motion: reduce) {
+
   *,
   *::before,
   *::after {

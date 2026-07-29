@@ -1,9 +1,9 @@
 import { createFileRoute, useNavigate, Link } from "@tanstack/react-router";
 import { useState } from "react";
-import { HandCoins, Landmark, ShieldCheck, UserRound } from "lucide-react";
+import { HandCoins, Landmark, ShieldCheck, UserRound, Wallet } from "lucide-react";
 import { toast } from "sonner";
 
-import { ROLE_HOME, useLedger, type Role } from "@/lib/trustflow/store";
+import { ROLE_HOME, useLedger, type Role } from "@/lib/openimpact/store";
 import { cn } from "@/lib/utils";
 
 export const Route = createFileRoute("/auth")({
@@ -15,13 +15,13 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Sign in or create your TrustFlow account" },
+      { title: "Sign in or create your openImpact account" },
       {
         name: "description",
         content:
-          "Create a donor, recipient or organisation account on TrustFlow — or open a pre-filled demo seat and explore each dashboard without signing up.",
+          "Create a donor, recipient or organisation account on openImpact — or open a pre-filled demo seat and explore each dashboard without signing up.",
       },
-      { property: "og:title", content: "Sign in to TrustFlow" },
+      { property: "og:title", content: "Sign in to openImpact" },
       {
         property: "og:description",
         content: "Three seats — donor, recipient, organisation. Real account or instant demo.",
@@ -197,7 +197,7 @@ function AuthPage() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-12">
       <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-        Sign in · TrustFlow
+        Sign in · openImpact
       </p>
       <h1 className="mt-3 max-w-2xl text-4xl leading-tight sm:text-5xl">
         Pick your seat at the ledger
@@ -271,6 +271,29 @@ function AuthPage() {
                   })}
                 </div>
               </fieldset>
+            )}
+
+            {mode === "signup" && role === "recipient" && (
+              <div className="flex gap-3 border border-border bg-secondary/40 p-4 text-sm">
+                <ShieldCheck className="mt-0.5 size-4 shrink-0 text-verified" aria-hidden />
+                <p className="text-muted-foreground">
+                  When you sign up as a recipient, you'll get a <strong>pseudonym</strong> (like
+                  'Coral-4821') — a randomly generated name that protects your real identity.
+                  Organisations and the public only ever see this pseudonym and your wallet address,
+                  never your real name.
+                </p>
+              </div>
+            )}
+
+            {mode === "signup" && role === "donor" && (
+              <div className="flex gap-3 border border-border bg-secondary/40 p-4 text-sm">
+                <Wallet className="mt-0.5 size-4 shrink-0 text-verified" aria-hidden />
+                <p className="text-muted-foreground">
+                  A <strong>wallet address</strong> is like a public account number on the
+                  blockchain. It lets you send and receive funds without sharing your real identity.
+                  You'll connect one when you make your first donation.
+                </p>
+              </div>
             )}
 
             {mode === "signup" && (

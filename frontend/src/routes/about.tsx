@@ -3,13 +3,13 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 export const Route = createFileRoute("/about")({
   head: () => ({
     meta: [
-      { title: "Why TrustFlow exists — the accountability gap in giving" },
+      { title: "Why openImpact exists — the accountability gap in giving" },
       {
         name: "description",
         content:
-          "Donors rarely find out what happened to their money. TrustFlow closes that gap: every donation gets a receipt, a status and proof of use from the person who received it.",
+          "Donors rarely find out what happened to their money. openImpact closes that gap: every donation gets a receipt, a status and proof of use from the person who received it.",
       },
-      { property: "og:title", content: "Why TrustFlow exists" },
+      { property: "og:title", content: "Why openImpact exists" },
       {
         property: "og:description",
         content:
@@ -51,7 +51,7 @@ function AboutPage() {
       <h2 className="mt-14 text-2xl">What we do about it</h2>
       <div className="mt-5 space-y-6 text-base leading-relaxed">
         <p>
-          TrustFlow turns each donation into a receipt that lives in public. The transfer itself is
+          openImpact turns each donation into a receipt that lives in public. The transfer itself is
           on a wallet-based ledger, so the amount, the time and the destination can be checked by
           anyone. What that money paid for is attached to the same receipt by the person who spent
           it: a photo, a line about what they bought, and a short note in their own words.

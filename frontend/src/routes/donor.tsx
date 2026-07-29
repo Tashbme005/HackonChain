@@ -1,9 +1,10 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Globe, Lock } from "lucide-react";
 
-import { ReceiptCard } from "@/components/trustflow/ReceiptCard";
-import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/trustflow/store";
-import { shortAddress } from "@/lib/trustflow/web3";
+import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
+import { ReceiptCard } from "@/components/openimpact/ReceiptCard";
+import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/openimpact/store";
+import { shortAddress } from "@/lib/openimpact/web3";
 
 export const Route = createFileRoute("/donor")({
   head: () => ({
@@ -14,7 +15,7 @@ export const Route = createFileRoute("/donor")({
         content:
           "The donor's seat: your wallet, your giving history as receipt cards, and the current status and proof of use behind every donation you've made.",
       },
-      { property: "og:title", content: "Donor profile — TrustFlow" },
+      { property: "og:title", content: "Donor profile — openImpact" },
       {
         property: "og:description",
         content: "Total given, causes supported, and a verified receipt for each donation.",
@@ -37,6 +38,13 @@ function DonorProfile() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10">
+      <Breadcrumbs
+        crumbs={[
+          { label: "Home", to: "/" },
+          { label: "Donor dashboard" },
+        ]}
+        className="mb-4"
+      />
       <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
         Donor view
       </p>
@@ -128,16 +136,26 @@ function DonorProfile() {
               key={d.id}
               to="/proof/$donationId"
               params={{ donationId: d.id }}
-              className="block rounded-sm transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
+              className="relative block rounded-sm transition-transform hover:-translate-y-0.5 focus-visible:outline focus-visible:outline-2 focus-visible:outline-offset-4 focus-visible:outline-ring"
               aria-label={`Open the public receipt for ${formatAmount(d.amount, d.currency)} to ${getOrg(d.orgId)?.name ?? "a recipient"}`}
             >
               <ReceiptCard donation={d} showLink={false} />
+              {d.proof && isRecentProof(d.proof.submittedAt) && (
+                <span className="absolute right-3 top-3 z-10 rounded-full bg-verified px-2 py-0.5 text-[10px] font-medium text-verified-foreground">
+                  New proof
+                </span>
+              )}
             </Link>
           ))}
         </div>
       )}
     </div>
   );
+}
+
+function isRecentProof(submittedAt: string) {
+  const diff = Date.now() - new Date(submittedAt).getTime();
+  return diff < 7 * 24 * 60 * 60 * 1000;
 }
 
 function Stat({ label, value, accent }: { label: string; value: string; accent?: boolean }) {

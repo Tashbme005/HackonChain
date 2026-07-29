@@ -1,8 +1,8 @@
 import { Link, useNavigate, useRouterState } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { ROLE_HOME, useLedger } from "@/lib/trustflow/store";
-import { connectWallet, shortAddress } from "@/lib/trustflow/web3";
+import { ROLE_HOME, useLedger } from "@/lib/openimpact/store";
+import { connectWallet, shortAddress } from "@/lib/openimpact/web3";
 import { cn } from "@/lib/utils";
 
 const PUBLIC_LINKS = [
@@ -52,7 +52,7 @@ export function SiteHeader() {
           >
             <span className="size-2 rounded-full bg-verified" />
           </span>
-          <span className="text-lg font-semibold tracking-tight">TrustFlow</span>
+          <span className="text-lg font-semibold tracking-tight">openImpact</span>
         </Link>
 
         <nav aria-label="Main" className="order-3 flex w-full gap-5 text-sm sm:order-none sm:w-auto">
@@ -127,7 +127,7 @@ export function SiteFooter() {
     <footer className="mt-20 border-t border-border">
       <div className="mx-auto flex max-w-6xl flex-wrap gap-x-10 gap-y-3 px-5 py-8 text-sm text-muted-foreground">
         <p className="w-full sm:w-auto sm:flex-1">
-          TrustFlow — a receipt for every donation. Prototype data; no funds move on chain yet.
+          openImpact — a receipt for every donation. Prototype data; no funds move on chain yet.
         </p>
         <Link to="/how-it-works" className="hover:text-foreground">
           How it works

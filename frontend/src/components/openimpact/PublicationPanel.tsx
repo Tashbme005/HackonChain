@@ -2,7 +2,7 @@ import { ExternalLink, Megaphone, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { formatAmount, formatStamp, useLedger } from "@/lib/trustflow/store";
+import { formatAmount, formatStamp, useLedger } from "@/lib/openimpact/store";
 import {
   PUBLICATION_STATUS_LABEL,
   PUBLICATION_TYPE_LABEL,
@@ -10,8 +10,8 @@ import {
   linkHost,
   publicationStatus,
   recipientPublicLabel,
-} from "@/lib/trustflow/types";
-import type { PublicationType } from "@/lib/trustflow/types";
+} from "@/lib/openimpact/types";
+import type { PublicationType } from "@/lib/openimpact/types";
 
 const TYPES = Object.keys(PUBLICATION_TYPE_LABEL) as PublicationType[];
 
