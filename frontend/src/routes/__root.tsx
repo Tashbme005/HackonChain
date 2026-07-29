@@ -4,6 +4,7 @@ import {
   Link,
   createRootRouteWithContext,
   useRouter,
+  useRouterState,
 } from "@tanstack/react-router";
 import { useEffect } from "react";
 import { Toaster } from "sonner";
@@ -82,17 +83,23 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+  const pathname = useRouterState({ select: (s) => s.location.pathname });
+  const isAuthShell = pathname === "/auth" || pathname === "/link-org";
 
   return (
     <QueryClientProvider client={queryClient}>
       <LedgerProvider>
         <div className="flex min-h-screen flex-col">
-          <SiteHeader />
+          {!isAuthShell && <SiteHeader />}
           <main className="flex-1">
             <Outlet />
           </main>
-          <GetInTouch />
-          <SiteFooter />
+          {!isAuthShell && (
+            <>
+              <GetInTouch />
+              <SiteFooter />
+            </>
+          )}
         </div>
         <Toaster position="top-center" />
       </LedgerProvider>
