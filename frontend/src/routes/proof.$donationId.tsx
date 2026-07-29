@@ -1,0 +1,171 @@
+import { createFileRoute, Link } from "@tanstack/react-router";
+import { Copy } from "lucide-react";
+import { toast } from "sonner";
+
+import { StampBadge, StatusPill } from "@/components/trustflow/StampBadge";
+import { formatAmount, formatStamp, useLedger } from "@/lib/trustflow/store";
+import { STATUS_LABEL, recipientPublicLabel } from "@/lib/trustflow/types";
+
+export const Route = createFileRoute("/proof/$donationId")({
+  head: () => ({
+    meta: [
+      { title: "Donation receipt — TrustFlow" },
+      {
+        name: "description",
+        content:
+          "A public receipt: who gave, how much, what it paid for, and the photo and testimonial that prove it.",
+      },
+      { property: "og:title", content: "Donation receipt — TrustFlow" },
+      {
+        property: "og:description",
+        content: "See the proof of use behind this donation — photo, description and testimonial.",
+      },
+    ],
+  }),
+  component: ProofPage,
+});
+
+function ProofPage() {
+  const { donationId } = Route.useParams();
+  const { donations, getRecipient, getOrg } = useLedger();
+  const donation = donations.find((d) => d.id === donationId);
+  const recipient = donation ? getRecipient(donation.recipientId) : undefined;
+  const org = getOrg(donation?.orgId);
+  const proof = donation?.proof ?? null;
+  const donorLabel = donation ? (donation.isPublic ? donation.donorName : "Anonymous") : "";
+
+  if (!donation || !recipient) {
+    return (
+      <div className="mx-auto max-w-2xl px-5 py-24 text-center text-muted-foreground">
+        That receipt doesn't exist. <Link to="/donor" className="underline">Back to your donations</Link>.
+      </div>
+    );
+  }
+
+  function copyLink() {
+    navigator.clipboard?.writeText(window.location.href);
+    toast.success("Link copied — share the receipt anywhere.");
+  }
+
+  return (
+    <div className="mx-auto max-w-2xl px-5 py-12">
+      <div className="receipt-edge border border-border bg-card px-6 pb-8 pt-9 sm:px-9">
+        <div className="flex items-start justify-between gap-4">
+          <div>
+            <p className="data-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+              TrustFlow receipt · {donation.id}
+            </p>
+            <h1 className="mt-2 text-3xl leading-tight sm:text-4xl">
+              {donation.isPublic ? donation.donorName : "Anonymous"} gave{" "}
+              <span className="data-mono">{formatAmount(donation.amount, donation.currency)}</span>{" "}
+              to {recipientPublicLabel(recipient)}
+            </h1>
+            {org && <p className="mt-2 text-sm text-muted-foreground">Through {org.name}</p>}
+          </div>
+          <StampBadge status={donation.status} size="lg" animate={donation.status === "verified"} />
+        </div>
+
+        <dl className="mt-6 space-y-2 text-sm">
+          <Row label="Status">
+            <StatusPill status={donation.status} />
+          </Row>
+          <Row label="Sent">
+            <span className="data-mono text-xs">{formatStamp(donation.timestamp)}</span>
+          </Row>
+          <Row label="Transaction">
+            <span className="data-mono break-all text-xs">{donation.txHash}</span>
+          </Row>
+          <Row label="Recipient wallet">
+            <span className="data-mono break-all text-xs">{recipient.walletAddress}</span>
+          </Row>
+          {donation.note && <Row label="Donor note">{donation.note}</Row>}
+        </dl>
+
+        <div className="dotted-rule mt-7 pt-7">
+          <p className="text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
+            What happened to it
+          </p>
+
+          {proof ? (
+            <>
+              <img
+                src={proof.photoUrl}
+                alt={`Proof of use submitted by ${recipientPublicLabel(recipient)}`}
+                loading="lazy"
+                className="mt-4 aspect-[16/10] w-full border border-border object-cover"
+              />
+              <p className="mt-4 text-base leading-relaxed">{proof.description}</p>
+              {proof.testimonial && (
+                <blockquote className="mt-6 border-l-2 border-verified pl-4 font-display text-xl leading-snug">
+                  <p className="text-base font-sans text-muted-foreground">
+                    Thank you, {donorLabel}, for this donation.
+                  </p>
+                  <p className="mt-2">“{proof.testimonial}”</p>
+                  <footer className="mt-2 font-sans text-sm text-muted-foreground">
+                    — {recipientPublicLabel(recipient)}, written for receipt{" "}
+                    <span className="data-mono">{donation.id}</span>
+                  </footer>
+                </blockquote>
+              )}
+              {/* Donor-facing result of the automated authenticity check —
+                  a badge, plus one plain sentence if it was flagged. */}
+              <div className="mt-5 flex flex-wrap items-center gap-3 border border-border bg-background px-4 py-3">
+                <StampBadge status={proof.flagged ? "flagged" : "verified"} size="sm" />
+                <p className="min-w-0 flex-1 text-sm">
+                  {proof.flagged ? (
+                    <>
+                      <span className="font-medium text-flagged">
+                        Flagged by the automated check.
+                      </span>{" "}
+                      {proof.aiReason ?? "This submission needs a human to look at it."}
+                    </>
+                  ) : proof.aiChecked === false ? (
+                    "The automated authenticity check could not run on this submission."
+                  ) : (
+                    "Checked for reused images, signs of editing, and consistency with the amount donated — nothing suspicious found."
+                  )}
+                </p>
+              </div>
+              <p className="data-mono mt-4 text-xs text-muted-foreground">
+                Proof uploaded {formatStamp(proof.submittedAt)}
+              </p>
+
+            </>
+          ) : (
+            <p className="mt-3 text-base text-muted-foreground">
+              {STATUS_LABEL[donation.status]}. Proof of use will appear on this page the moment{" "}
+              {recipientPublicLabel(recipient)} uploads it.
+            </p>
+          )}
+        </div>
+
+        <div className="dotted-rule mt-7 flex flex-wrap items-center gap-3 pt-6">
+          <button
+            type="button"
+            onClick={copyLink}
+            className="inline-flex items-center gap-2 rounded-full border border-input px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent"
+          >
+            <Copy className="size-4" aria-hidden />
+            Copy share link
+          </button>
+          <Link
+            to="/donate/$recipientId"
+            params={{ recipientId: recipient.id }}
+            className="rounded-full bg-primary px-5 py-2.5 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
+          >
+            Donate to {recipientPublicLabel(recipient)}
+          </Link>
+        </div>
+      </div>
+    </div>
+  );
+}
+
+function Row({ label, children }: { label: string; children: React.ReactNode }) {
+  return (
+    <div className="flex items-baseline justify-between gap-6">
+      <dt className="shrink-0 text-muted-foreground">{label}</dt>
+      <dd className="min-w-0 text-right">{children}</dd>
+    </div>
+  );
+}
