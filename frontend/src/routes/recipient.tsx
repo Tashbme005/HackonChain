@@ -50,6 +50,7 @@ function RecipientProfile() {
   const [description, setDescription] = useState("");
   const [testimonial, setTestimonial] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [photoFile, setPhotoFile] = useState<File | null>(null);
   const [shareContact, setShareContact] = useState("");
   const [shareSocial, setShareSocial] = useState("");
   const [shareNote, setShareNote] = useState("");
@@ -79,7 +80,8 @@ function RecipientProfile() {
     for (const d of awaiting) {
       // eslint-disable-next-line no-await-in-loop
       await submitToChain({ action: "confirmReceipt", donationId: d.id });
-      confirmReceipt(d.id);
+      // eslint-disable-next-line no-await-in-loop
+      await confirmReceipt(d.id);
     }
     toast.success("Marked as received. The people who sent it can see that now.");
   }
@@ -127,17 +129,17 @@ function RecipientProfile() {
       if (targetId === "general") {
         if (me?.orgId) {
           await submitToChain({ action: "attachGeneralProof", recipientId: currentRecipientId });
-          attachGeneralProof(currentRecipientId, me.orgId, reviewed);
+          await attachGeneralProof(currentRecipientId, me.orgId, reviewed, photoFile);
         }
       } else {
         await submitToChain({ action: "attachProof", donationId: targetId });
-        attachProofToDonation(targetId, reviewed);
+        await attachProofToDonation(targetId, reviewed, photoFile);
       }
 
-      setBusy(false);
       setDescription("");
       setTestimonial("");
       setPhotoUrl(null);
+      setPhotoFile(null);
       setShareContact("");
       setShareSocial("");
       setShareNote("");
@@ -153,10 +155,11 @@ function RecipientProfile() {
         );
       }
     } catch {
-      setBusy(false);
       const msg = "Something went wrong uploading your proof. Please try again.";
       setUploadError(msg);
       toast.error(msg);
+    } finally {
+      setBusy(false);
     }
   }
 
@@ -314,7 +317,7 @@ function RecipientProfile() {
                     type="button"
                     onClick={async () => {
                       await submitToChain({ action: "confirmReceipt", donationId: d.id });
-                      confirmReceipt(d.id);
+                      await confirmReceipt(d.id);
                       toast.success("Marked as received.");
                     }}
                     className="rounded-full bg-primary px-4 py-2 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90"
@@ -440,13 +443,12 @@ function RecipientProfile() {
                   onChange={(e) => {
                     const file = e.target.files?.[0];
                     if (!file) return;
-                    // Read as a data URL so the automated check can see the
-                    // actual image, not a browser-only blob reference.
+                    setPhotoFile(file);
+                    // Preview as a data URL; Storage upload uses the File when signed in.
                     const reader = new FileReader();
                     reader.onload = () => setPhotoUrl(String(reader.result));
                     reader.readAsDataURL(file);
                   }}
-
                 />
               </label>
               {photoUrl ? (

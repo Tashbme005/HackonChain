@@ -63,29 +63,35 @@ function DonateFlow() {
 
   async function onSend() {
     setBusy(true);
-    const txHash = await submitToChain({
-      to: recipient!.walletAddress,
-      amount,
-      currency: "USDC",
-      isPublic,
-    });
-    const donation: Donation = {
-      id: `dn-${Math.floor(1100 + Math.random() * 800)}`,
-      donorName: currentDonorName,
-      isPublic,
-      amount,
-      currency: "USDC",
-      recipientId: recipient!.id,
-      orgId: recipient!.orgId,
-      status: "pending",
-      txHash: txHash || mockTxHash(),
-      timestamp: new Date().toISOString(),
-      note: note.trim() || undefined,
-    };
-    addDonation(donation);
-    setCreated(donation);
-    setBusy(false);
-    setStep("done");
+    try {
+      const txHash = await submitToChain({
+        to: recipient!.walletAddress,
+        amount,
+        currency: "USDC",
+        isPublic,
+      });
+      const donation: Donation = {
+        id: `dn-${crypto.randomUUID().slice(0, 8)}`,
+        donorName: isPublic ? currentDonorName : "Anonymous",
+        isPublic,
+        amount,
+        currency: "USDC",
+        recipientId: recipient!.id,
+        orgId: recipient!.orgId,
+        status: "pending",
+        txHash: txHash || mockTxHash(),
+        timestamp: new Date().toISOString(),
+        note: note.trim() || undefined,
+      };
+      const saved = await addDonation(donation);
+      setCreated(saved);
+      setStep("done");
+    } catch (err) {
+      console.error(err);
+      window.alert(err instanceof Error ? err.message : "Could not save donation.");
+    } finally {
+      setBusy(false);
+    }
   }
 
   return (

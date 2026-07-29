@@ -50,8 +50,8 @@ function LinkOrgPage() {
 
   if (!allowed || !me) return null;
 
-  function onLink(orgId: string, orgName: string) {
-    linkRecipientToOrg(currentRecipientId, orgId);
+  async function onLink(orgId: string, orgName: string) {
+    await linkRecipientToOrg(currentRecipientId, orgId);
     toast.success(`You're linked to ${orgName}.`);
     navigate({ to: "/recipient" });
   }

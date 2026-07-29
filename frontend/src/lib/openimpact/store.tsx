@@ -1,4 +1,4 @@
-import { createContext, useCallback, useContext, useEffect, useMemo, useState } from "react";
+import { createContext, useCallback, useContext, useEffect, useMemo, useRef, useState } from "react";
 import type { ReactNode } from "react";
 import { useNavigate } from "@tanstack/react-router";
 
@@ -12,7 +12,14 @@ import {
   DONOR_PROFILE,
 } from "./mock-data";
 import { mockTxHash } from "./web3";
-import type { Donation, Organisation, ProofOfUse, PublicationProof, Recipient } from "./types";
+import type {
+  Donation,
+  Organisation,
+  ProofOfUse,
+  PublicationProof,
+  Recipient,
+  RecipientInvite,
+} from "./types";
 import { isFullyAccounted } from "./types";
 import { isSupabaseConfigured } from "@/lib/supabase/client";
 import {
@@ -24,6 +31,22 @@ import {
   signUpWithSupabase,
   type AuthProfile,
 } from "@/lib/supabase/auth";
+import {
+  fetchLedgerSnapshot,
+  SEED_ORG_KILIFI,
+  SEED_RECIPIENT_CORAL,
+} from "@/lib/supabase/reads";
+import { insertDonation } from "@/lib/supabase/donations";
+import { confirmDonationReceipt, persistProof } from "@/lib/supabase/proofs";
+import {
+  deleteInvite,
+  deletePublication,
+  insertInvite,
+  linkRecipientOrg,
+  upsertPublication,
+} from "@/lib/supabase/org";
+
+export type { RecipientInvite };
 
 const STORAGE_KEY = "openimpact.state.v8";
 
@@ -102,28 +125,6 @@ const DEMO_ACCOUNTS: Account[] = [
   },
 ];
 
-/**
- * A generic, unassigned "recipient slot" an organisation opens against a
- * project or disbursement. The org does NOT know who will claim it — whoever
- * opens the link signs up with their real identity (private) and the org only
- * ever sees the pseudonym + wallet that gets assigned on claim.
- */
-export interface RecipientInvite {
-  code: string;
-  orgId: string;
-  /** The project or disbursement this slot belongs to. */
-  projectLabel: string;
-  /** Optional amount earmarked for the slot. */
-  amount?: number;
-  note?: string;
-  createdAt: string;
-  usedByAccountId?: string;
-  /** Set on claim — the pseudonym assigned to whoever opened the link. */
-  claimedPseudonym?: string;
-  claimedWallet?: string;
-  claimedAt?: string;
-}
-
 const PSEUDONYM_WORDS = [
   "Coral", "Baobab", "Kestrel", "Marigold", "Almendro", "Harbour", "Tamarind", "Juniper",
   "Cinder", "Meridian", "Saffron", "Pelican", "Quartz", "Willow", "Anchor", "Lantern",
@@ -181,19 +182,21 @@ interface LedgerValue extends LedgerState {
   signOut: () => void;
   setDonorIsPublic: (v: boolean) => void;
   setWalletAddress: (address: string | null) => void;
-  addDonation: (donation: Donation) => void;
-  confirmReceipt: (donationId: string) => void;
+  addDonation: (donation: Donation) => Promise<Donation>;
+  confirmReceipt: (donationId: string) => Promise<void>;
   /** Primary case: proof answers ONE donation, so ONE donor sees it first. */
   attachProofToDonation: (
     donationId: string,
     proof: Omit<ProofOfUse, "id" | "scope" | "donationId" | "recipientId" | "donorName" | "donorIsPublic">,
-  ) => void;
+    file?: File | null,
+  ) => Promise<void>;
   /** Secondary case: general testimonial, posted to the organisation's page. */
   attachGeneralProof: (
     recipientId: string,
     orgId: string,
     proof: Omit<ProofOfUse, "id" | "scope" | "recipientId" | "orgId">,
-  ) => void;
+    file?: File | null,
+  ) => Promise<void>;
   /** Every proof this recipient has published, newest first. */
   proofsByRecipient: (recipientId: string) => ProofOfUse[];
   getRecipient: (id: string) => Recipient | undefined;
@@ -209,19 +212,19 @@ interface LedgerValue extends LedgerState {
   attachPublicationProof: (
     donationId: string,
     draft: Omit<PublicationProof, "id" | "submittedAt">,
-  ) => void;
-  removePublicationProof: (donationId: string) => void;
+  ) => Promise<void>;
+  removePublicationProof: (donationId: string) => Promise<void>;
   /** Organisation console: open an unassigned recipient slot on a project. */
   createInvite: (input: {
     orgId: string;
     projectLabel: string;
     amount?: number;
     note?: string;
-  }) => RecipientInvite;
-  revokeInvite: (code: string) => void;
+  }) => Promise<RecipientInvite>;
+  revokeInvite: (code: string) => Promise<void>;
   getInvite: (code?: string) => RecipientInvite | undefined;
   /** Self-serve path: attach an existing recipient account to an organisation. */
-  linkRecipientToOrg: (recipientId: string, orgId: string) => void;
+  linkRecipientToOrg: (recipientId: string, orgId: string) => Promise<void>;
   updateRecipientStory: (recipientId: string, story: string) => void;
 }
 
@@ -254,13 +257,33 @@ function newWallet() {
 export function LedgerProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<LedgerState>(initialState);
   const [hydrated, setHydrated] = useState(false);
+  const stateRef = useRef(state);
+  stateRef.current = state;
 
-  // Hydrate after mount. Prefer Supabase session when configured; else localStorage mock.
+  // Hydrate after mount. Prefer Supabase ledger + session when configured; else localStorage mock.
   useEffect(() => {
     let unsub = () => {};
     (async () => {
       try {
         if (isSupabaseConfigured()) {
+          const snapshot = await fetchLedgerSnapshot();
+          setState((s) => ({
+            ...s,
+            organisations: snapshot.organisations,
+            recipients: snapshot.recipients,
+            donations: snapshot.donations,
+            invites: snapshot.invites.length ? snapshot.invites : s.invites,
+            accounts: s.accounts.map((a) => {
+              if (a.role === "recipient" && a.isDemo) {
+                return { ...a, entityId: SEED_RECIPIENT_CORAL };
+              }
+              if (a.role === "organisation" && a.isDemo) {
+                return { ...a, entityId: SEED_ORG_KILIFI };
+              }
+              return a;
+            }),
+          }));
+
           const profile = await getSessionProfile();
           if (profile) {
             const account = profileToAccount(profile);
@@ -317,11 +340,14 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
     setState((s) => ({ ...s, donorIsPublic: v }));
   }, []);
 
-  const addDonation = useCallback((donation: Donation) => {
-    setState((s) => ({ ...s, donations: [donation, ...s.donations] }));
+  const addDonation = useCallback(async (donation: Donation) => {
+    const saved = await insertDonation(donation);
+    setState((s) => ({ ...s, donations: [saved, ...s.donations] }));
+    return saved;
   }, []);
 
-  const confirmReceipt = useCallback((donationId: string) => {
+  const confirmReceipt = useCallback(async (donationId: string) => {
+    await confirmDonationReceipt(donationId);
     setState((s) => ({
       ...s,
       donations: s.donations.map((d) =>
@@ -331,40 +357,70 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const attachProofToDonation = useCallback<LedgerValue["attachProofToDonation"]>(
-    (donationId, draft) => {
-      setState((s) => {
-        const target = s.donations.find((d) => d.id === donationId);
-        if (!target) return s;
-        // The donor is read off the donation record, so the proof lands in that
-        // donor's dashboard rather than a generic organisation feed.
-        const proof: ProofOfUse = {
+    async (donationId, draft, file) => {
+      const donation = stateRef.current.donations.find((d) => d.id === donationId);
+      if (!donation) return;
+
+      const applyLocal = (proof: ProofOfUse) => {
+        setState((s) => {
+          const row = s.donations.find((d) => d.id === donationId);
+          if (!row) return s;
+          return {
+            ...s,
+            donations: s.donations.map((d) =>
+              d.id === donationId
+                ? { ...d, proof, status: proof.flagged ? "flagged" : "verified" }
+                : d,
+            ),
+            recipients: s.recipients.map((r) =>
+              r.id === row.recipientId ? { ...r, proofOfUse: proof } : r,
+            ),
+          };
+        });
+      };
+
+      const seenBefore = stateRef.current.donations.some(
+        (d) => d.recipientId === donation.recipientId && d.proof?.photoUrl === draft.photoUrl,
+      );
+
+      const remote = await persistProof({
+        draft: {
           ...draft,
-          id: `pf-${Date.now().toString(36)}`,
           scope: "donation",
           donationId,
-          recipientId: target.recipientId,
-          donorName: target.donorName,
-          donorIsPublic: target.isPublic,
-        };
-        return {
-          ...s,
-          donations: s.donations.map((d) =>
-            d.id === donationId
-              ? { ...d, proof, status: proof.flagged ? "flagged" : "verified" }
-              : d,
-          ),
-          recipients: s.recipients.map((r) =>
-            r.id === target.recipientId ? { ...r, proofOfUse: proof } : r,
-          ),
-        };
+          recipientId: donation.recipientId,
+          donorName: donation.donorName,
+          donorIsPublic: donation.isPublic,
+          orgId: donation.orgId,
+        },
+        file,
+        amount: donation.amount,
+        currency: donation.currency,
+        seenBefore,
+      });
+
+      if (remote) {
+        applyLocal(remote.proof);
+        return;
+      }
+
+      applyLocal({
+        ...draft,
+        id: `pf-${Date.now().toString(36)}`,
+        scope: "donation",
+        donationId,
+        recipientId: donation.recipientId,
+        donorName: donation.donorName,
+        donorIsPublic: donation.isPublic,
       });
     },
     [],
   );
 
   const attachPublicationProof = useCallback<LedgerValue["attachPublicationProof"]>(
-    (donationId, draft) => {
-      const publication: PublicationProof = {
+    async (donationId, draft) => {
+      const remote = await upsertPublication(donationId, draft);
+      const publication: PublicationProof = remote ?? {
         ...draft,
         url: draft.url.trim(),
         caption: draft.caption?.trim() || undefined,
@@ -379,7 +435,8 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
     [],
   );
 
-  const removePublicationProof = useCallback((donationId: string) => {
+  const removePublicationProof = useCallback(async (donationId: string) => {
+    await deletePublication(donationId);
     setState((s) => ({
       ...s,
       donations: s.donations.map((d) => (d.id === donationId ? { ...d, publication: null } : d)),
@@ -387,14 +444,25 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
   }, []);
 
   const attachGeneralProof = useCallback<LedgerValue["attachGeneralProof"]>(
-    (recipientId, orgId, draft) => {
-      const proof: ProofOfUse = {
+    async (recipientId, orgId, draft, file) => {
+      const remote = await persistProof({
+        draft: {
+          ...draft,
+          scope: "general",
+          recipientId,
+          orgId,
+        },
+        file,
+      });
+
+      const proof: ProofOfUse = remote?.proof ?? {
         ...draft,
         id: `pf-gen-${Date.now().toString(36)}`,
         scope: "general",
         recipientId,
         orgId,
       };
+
       setState((s) => ({
         ...s,
         organisations: s.organisations.map((o) =>
@@ -541,7 +609,7 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
   );
 
   const createInvite = useCallback<LedgerValue["createInvite"]>(
-    ({ orgId, projectLabel, amount, note }) => {
+    async ({ orgId, projectLabel, amount, note }) => {
       const code = `INV-${Math.random().toString(36).slice(2, 6).toUpperCase()}${Math.random()
         .toString(36)
         .slice(2, 4)
@@ -554,17 +622,21 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
         note: note?.trim() || undefined,
         createdAt: new Date().toISOString(),
       };
-      setState((s) => ({ ...s, invites: [invite, ...s.invites] }));
-      return invite;
+      const remote = await insertInvite(invite);
+      const saved = remote ?? invite;
+      setState((s) => ({ ...s, invites: [saved, ...s.invites] }));
+      return saved;
     },
     [],
   );
 
-  const revokeInvite = useCallback((code: string) => {
+  const revokeInvite = useCallback(async (code: string) => {
+    await deleteInvite(code);
     setState((s) => ({ ...s, invites: s.invites.filter((i) => i.code !== code) }));
   }, []);
 
-  const linkRecipientToOrg = useCallback((recipientId: string, orgId: string) => {
+  const linkRecipientToOrg = useCallback(async (recipientId: string, orgId: string) => {
+    await linkRecipientOrg(recipientId, orgId);
     setState((s) => ({
       ...s,
       recipients: s.recipients.map((r) => (r.id === recipientId ? { ...r, orgId } : r)),
@@ -683,9 +755,18 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
       account,
       currentDonorName: donorProfile.name,
       currentRecipientId:
-        account?.role === "recipient" ? (account.entityId ?? CURRENT_RECIPIENT_ID) : CURRENT_RECIPIENT_ID,
+        account?.role === "recipient"
+          ? (account.entityId ??
+            (isSupabaseConfigured() ? SEED_RECIPIENT_CORAL : CURRENT_RECIPIENT_ID))
+          : isSupabaseConfigured()
+            ? SEED_RECIPIENT_CORAL
+            : CURRENT_RECIPIENT_ID,
       currentOrgId:
-        account?.role === "organisation" ? (account.entityId ?? CURRENT_ORG_ID) : CURRENT_ORG_ID,
+        account?.role === "organisation"
+          ? (account.entityId ?? (isSupabaseConfigured() ? SEED_ORG_KILIFI : CURRENT_ORG_ID))
+          : isSupabaseConfigured()
+            ? SEED_ORG_KILIFI
+            : CURRENT_ORG_ID,
       donorProfile,
       signUp,
       signIn,

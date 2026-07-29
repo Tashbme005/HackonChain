@@ -36,7 +36,22 @@ const SCRIPTS: Record<string, DemoScript> = {
       "A replacement pump head and two lengths of pipe from Mtwapa Hardware. The borehole was running again the same afternoon.",
     testimonial: "The queue at the well is twenty minutes now, not two hours.",
   },
+  // Seed UUID aliases (backend/supabase/seed.sql)
+  "a1000000-0000-4000-8000-000000000001": {
+    amount: 120,
+    donorNote: "For the borehole repair.",
+    description:
+      "A replacement pump head and two lengths of pipe from Mtwapa Hardware. The borehole was running again the same afternoon.",
+    testimonial: "The queue at the well is twenty minutes now, not two hours.",
+  },
   "org-booklift": {
+    amount: 60,
+    donorNote: "Books, please.",
+    description:
+      "Forty second-hand readers and a shelf, collected from the district depot and logged into the classroom library.",
+    testimonial: "Every child in the class has a book on their desk this term.",
+  },
+  "a1000000-0000-4000-8000-000000000002": {
     amount: 60,
     donorNote: "Books, please.",
     description:
@@ -50,7 +65,21 @@ const SCRIPTS: Record<string, DemoScript> = {
       "Bulk rice, oil and vegetables for four nights of service, bought at the wholesale market.",
     testimonial: "Nobody was turned away at the door last week.",
   },
+  "a1000000-0000-4000-8000-000000000003": {
+    amount: 90,
+    donorNote: "Hot meals for the winter shift.",
+    description:
+      "Bulk rice, oil and vegetables for four nights of service, bought at the wholesale market.",
+    testimonial: "Nobody was turned away at the door last week.",
+  },
   "org-solarseed": {
+    amount: 150,
+    donorNote: "Towards the panel.",
+    description:
+      "One 200W panel and a charge controller, installed on the workshop roof by the local fitter.",
+    testimonial: "The sewing machines run all day now, no generator fuel.",
+  },
+  "a1000000-0000-4000-8000-000000000004": {
     amount: 150,
     donorNote: "Towards the panel.",
     description:
@@ -92,7 +121,7 @@ export function DemoSimulator() {
           recipientId: recipient.id,
           amount: script.amount,
         }).catch(() => mockTxHash());
-        addDonation({
+        const saved = await addDonation({
           id,
           donorName: "Demo Visitor",
           isPublic: true,
@@ -106,13 +135,13 @@ export function DemoSimulator() {
           note: script.donorNote,
           proof: null,
         });
-        setDonationId(id);
+        setDonationId(saved.id);
       } else if (step === 2 && donationId) {
         await wait(600);
-        confirmReceipt(donationId);
+        await confirmReceipt(donationId);
       } else if (step === 3 && donationId) {
         await wait(700);
-        attachProofToDonation(donationId, {
+        await attachProofToDonation(donationId, {
           photoUrl: org.imageUrl,
           description: script.description,
           testimonial: script.testimonial,

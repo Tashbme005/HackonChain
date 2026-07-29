@@ -177,6 +177,24 @@ export interface Organisation {
   generalProofs?: ProofOfUse[];
 }
 
+/**
+ * A generic, unassigned recipient slot an organisation opens against a
+ * project or disbursement. The org never learns the claimant's real name —
+ * only the pseudonym + wallet assigned on claim.
+ */
+export interface RecipientInvite {
+  code: string;
+  orgId: string;
+  projectLabel: string;
+  amount?: number;
+  note?: string;
+  createdAt: string;
+  usedByAccountId?: string;
+  claimedPseudonym?: string;
+  claimedWallet?: string;
+  claimedAt?: string;
+}
+
 export const STATUS_LABEL: Record<DonationStatus, string> = {
   pending: "Waiting to be received",
   received: "Received — proof pending",
