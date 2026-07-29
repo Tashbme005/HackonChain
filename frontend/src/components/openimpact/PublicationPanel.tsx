@@ -38,35 +38,31 @@ export function PublicationPanel({ orgId }: { orgId: string }) {
   const pending = rows.filter((d) => !d.publication).length;
 
   return (
-    <section className="mt-12">
-      <div className="flex flex-wrap items-baseline justify-between gap-3">
-        <div className="flex items-center gap-2">
-          <Megaphone className="size-5 text-pending" aria-hidden />
-          <h2 className="text-2xl">Publication proof</h2>
-          <span className="rounded-full bg-flagged-soft px-2.5 py-1 text-[11px] font-medium uppercase tracking-widest text-flagged">
+    <section className="space-y-4">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <div className="flex flex-wrap items-center gap-2">
+          <span className="inline-flex items-center gap-1.5 rounded-full bg-flagged-soft px-2.5 py-1 text-[11px] font-medium uppercase tracking-widest text-flagged">
+            <Megaphone className="size-3.5" aria-hidden />
             Required
           </span>
+          {pending > 0 && (
+            <span className="text-sm text-flagged">
+              {pending} donation{pending === 1 ? "" : "s"} still pending
+            </span>
+          )}
         </div>
         <span className="data-mono text-xs uppercase tracking-widest text-muted-foreground">
-          {orgPublicationRate(orgId)}% published · {orgAccountedRate(orgId)}% fully accounted
+          {orgPublicationRate(orgId)}% published · {orgAccountedRate(orgId)}%
+          fully accounted
         </span>
       </div>
-      <p className="mt-2 max-w-2xl text-sm text-muted-foreground">
-        For every donation you receive, you must show where its impact was publicised — a news
-        article, a social post, a blog entry, or a photo of a printed publication. A donation is
-        only <strong className="font-medium text-foreground">fully accounted for</strong> once the
-        recipient's proof of use and your publication proof are both filed.
-        {pending > 0 && (
-          <>
-            {" "}
-            <span className="text-flagged">
-              {pending} donation{pending === 1 ? "" : "s"} still pending publication.
-            </span>
-          </>
-        )}
+      <p className="max-w-2xl text-sm text-muted-foreground">
+        File where each donation&apos;s impact was publicised (news, social,
+        blog, or print). A gift is fully accounted for only when recipient
+        proof of use and your publication are both filed.
       </p>
 
-      <div className="mt-4 overflow-x-auto border border-border bg-card">
+      <div className="overflow-x-auto border border-border bg-card">
         <table className="w-full min-w-[720px] text-sm">
           <thead>
             <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-muted-foreground">

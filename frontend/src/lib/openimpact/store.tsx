@@ -226,6 +226,14 @@ interface LedgerValue extends LedgerState {
   /** Self-serve path: attach an existing recipient account to an organisation. */
   linkRecipientToOrg: (recipientId: string, orgId: string) => Promise<void>;
   updateRecipientStory: (recipientId: string, story: string) => void;
+  updateAccountProfile: (patch: {
+    name?: string;
+    location?: string;
+  }) => void;
+  updateOrganisationProfile: (
+    orgId: string,
+    patch: { name?: string; tagline?: string; description?: string },
+  ) => void;
 }
 
 const initialState: LedgerState = {
@@ -655,6 +663,56 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
     }));
   }, []);
 
+  const updateAccountProfile = useCallback(
+    (patch: { name?: string; location?: string }) => {
+      setState((s) => {
+        if (!s.sessionId) return s;
+        return {
+          ...s,
+          accounts: s.accounts.map((a) =>
+            a.id === s.sessionId
+              ? {
+                  ...a,
+                  name: patch.name?.trim() || a.name,
+                  location:
+                    patch.location !== undefined
+                      ? patch.location.trim() || undefined
+                      : a.location,
+                }
+              : a,
+          ),
+        };
+      });
+    },
+    [],
+  );
+
+  const updateOrganisationProfile = useCallback(
+    (
+      orgId: string,
+      patch: { name?: string; tagline?: string; description?: string },
+    ) => {
+      setState((s) => ({
+        ...s,
+        organisations: s.organisations.map((o) =>
+          o.id === orgId
+            ? {
+                ...o,
+                name: patch.name?.trim() || o.name,
+                tagline: patch.tagline?.trim() || o.tagline,
+                description: patch.description?.trim() || o.description,
+              }
+            : o,
+        ),
+        accounts: s.accounts.map((a) =>
+          a.role === "organisation" && a.entityId === orgId && patch.name?.trim()
+            ? { ...a, name: patch.name.trim() }
+            : a,
+        ),
+      }));
+    },
+    [],
+  );
 
   const signIn = useCallback<LedgerValue["signIn"]>(async (email, password) => {
     if (isSupabaseConfigured()) {
@@ -800,6 +858,8 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
       getInvite: (code) => (code ? state.invites.find((i) => i.code === code) : undefined),
       linkRecipientToOrg,
       updateRecipientStory,
+      updateAccountProfile,
+      updateOrganisationProfile,
     };
   }, [
     state,
@@ -820,6 +880,8 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
     revokeInvite,
     linkRecipientToOrg,
     updateRecipientStory,
+    updateAccountProfile,
+    updateOrganisationProfile,
   ]);
 
   return <LedgerContext.Provider value={value}>{children}</LedgerContext.Provider>;

@@ -86,6 +86,11 @@ function RootComponent() {
   const { queryClient } = Route.useRouteContext();
   const pathname = useRouterState({ select: (s) => s.location.pathname });
   const isAuthShell = pathname === "/auth" || pathname === "/link-org";
+  const isDashboardShell =
+    pathname === "/donor" ||
+    pathname === "/recipient" ||
+    pathname === "/organisation";
+  const hidePublicChrome = isAuthShell || isDashboardShell;
 
   return (
     <QueryClientProvider client={queryClient}>
@@ -94,17 +99,22 @@ function RootComponent() {
           className={cn(
             "flex min-h-screen flex-col",
             isAuthShell && "xl:h-dvh xl:overflow-hidden",
+            isDashboardShell && "min-h-dvh",
           )}
         >
-          {!isAuthShell && <SiteHeader />}
+          {!hidePublicChrome && <SiteHeader />}
           <main
             className={cn(
-              isAuthShell ? "flex-1 xl:min-h-0 xl:overflow-hidden" : "flex-1",
+              isAuthShell
+                ? "flex-1 xl:min-h-0 xl:overflow-hidden"
+                : isDashboardShell
+                  ? "flex-1"
+                  : "flex-1",
             )}
           >
             <Outlet />
           </main>
-          {!isAuthShell && (
+          {!hidePublicChrome && (
             <>
               <GetInTouch />
               <SiteFooter />
