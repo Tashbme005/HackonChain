@@ -247,9 +247,9 @@ function AuthPage() {
         : "We couldn't find that invite link. Sign in below or create an account."
       : null;
 
-  // Lock the document on desktop so only the right panel scrolls.
+  // Lock document scroll on desktop so only the dark panel scrolls.
   useEffect(() => {
-    const mq = window.matchMedia("(min-width: 1024px)");
+    const mq = window.matchMedia("(min-width: 1280px)");
     const apply = () => {
       const lock = mq.matches;
       document.documentElement.style.overflow = lock ? "hidden" : "";
@@ -466,8 +466,8 @@ function AuthPage() {
 
   return (
     <>
-      {/* Mobile */}
-      <div className="flex min-h-dvh flex-col bg-background px-5 py-5 sm:px-8 lg:hidden">
+      {/* Phone + tablet (incl. iPad): stacked form + demo */}
+      <div className="flex min-h-dvh flex-col bg-background px-5 py-5 sm:px-6 md:px-8 xl:hidden">
         <BrandLockup className="shrink-0" />
         <div
           className={cn(
@@ -480,7 +480,7 @@ function AuthPage() {
             <DemoPanel onFill={fillDemo} onEnter={onDemo} busy={busy} />
           </div>
         </div>
-        <div className="mt-auto flex shrink-0 items-center justify-between gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+        <div className="mx-auto mt-auto flex w-full max-w-md shrink-0 items-center justify-between gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} OpenImpact</p>
           <Link to="/trust" className="underline-offset-4 hover:underline">
             Privacy
@@ -488,19 +488,19 @@ function AuthPage() {
         </div>
       </div>
 
-      {/* Desktop: light canvas + floating rounded dark panel on the right */}
-      <div className="relative hidden h-dvh overflow-hidden bg-background lg:block">
-        <div className="absolute inset-y-0 left-0 z-10 flex w-[min(52%,34rem)] flex-col overflow-hidden px-10 py-7 xl:w-[min(50%,36rem)] xl:px-12 xl:py-8">
+      {/* Desktop: form + dark panel */}
+      <div className="relative hidden h-dvh w-full grid-cols-[minmax(0,1.25fr)_minmax(20rem,0.9fr)] gap-6 overflow-hidden bg-background p-6 xl:grid">
+        <div className="flex min-h-0 min-w-0 flex-col overflow-y-auto overscroll-contain px-6 py-4 xl:px-8">
           <BrandLockup className="shrink-0" />
           <div
             className={cn(
-              "flex min-h-0 flex-1 flex-col justify-center",
-              mode === "signup" ? "py-1" : "py-2",
+              "flex w-full min-w-0 flex-1 flex-col justify-center",
+              mode === "signup" ? "py-2" : "py-3",
             )}
           >
             {formFields}
           </div>
-          <div className="mt-auto flex shrink-0 items-center justify-between gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+          <div className="flex shrink-0 items-center justify-between gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
             <p>© {new Date().getFullYear()} OpenImpact</p>
             <Link to="/trust" className="underline-offset-4 hover:underline">
               Privacy
@@ -508,7 +508,7 @@ function AuthPage() {
           </div>
         </div>
 
-        <aside className="absolute inset-y-8 right-8 z-20 flex w-[min(44%,34rem)] flex-col overflow-hidden rounded-[1.5rem] bg-ink text-paper shadow-[0_24px_64px_oklch(0.25_0.03_214_/_0.22)] xl:inset-y-10 xl:right-10 xl:w-[min(46%,36rem)] xl:rounded-[1.75rem]">
+        <aside className="relative flex min-h-0 min-w-0 flex-col overflow-hidden rounded-[1.75rem] bg-ink text-paper shadow-[0_24px_64px_oklch(0.25_0.03_214_/_0.22)]">
           <div
             className="pointer-events-none absolute -right-12 top-12 size-52 rounded-full bg-verified/20 blur-3xl"
             aria-hidden
@@ -518,45 +518,45 @@ function AuthPage() {
             aria-hidden
           />
 
-          <div className="relative flex h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain p-7 xl:gap-6 xl:p-8">
-            <div className="shrink-0">
-              <p className="data-mono text-[10px] uppercase tracking-[0.2em] text-verified">
-                On the ledger
-              </p>
-              <h2 className="mt-2 font-display text-2xl leading-tight xl:text-3xl">
-                Every donation, a receipt you can verify.
-              </h2>
-              <p className="mt-2 text-sm leading-relaxed text-paper/65">
-                Sign in to follow proof of use, or open a demo seat below.
-              </p>
-            </div>
+          <div className="relative flex h-full min-h-0 flex-col overflow-y-auto overscroll-contain p-7">
+            <div className="flex shrink-0 flex-col gap-5">
+              <div>
+                <p className="data-mono text-[10px] uppercase tracking-[0.2em] text-verified">
+                  On the ledger
+                </p>
+                <h2 className="mt-2 font-display text-3xl leading-tight">
+                  Every donation, a receipt you can verify.
+                </h2>
+                <p className="mt-2 text-sm leading-relaxed text-paper/65">
+                  Sign in to follow proof of use, or open a demo seat below.
+                </p>
+              </div>
 
-            <ol className="grid shrink-0 grid-cols-3 gap-2">
-              {[
-                { n: "01", label: "Donate" },
-                { n: "02", label: "Confirm" },
-                { n: "03", label: "Verify" },
-              ].map((step) => (
-                <li
-                  key={step.n}
-                  className="rounded-xl border border-paper/12 bg-paper/5 px-2.5 py-2.5"
-                >
-                  <p className="data-mono text-[10px] tracking-widest text-verified">
-                    {step.n}
-                  </p>
-                  <p className="mt-1 text-xs font-medium text-paper">
-                    {step.label}
-                  </p>
-                </li>
-              ))}
-            </ol>
+              <ol className="grid grid-cols-3 gap-2">
+                {[
+                  { n: "01", label: "Donate" },
+                  { n: "02", label: "Confirm" },
+                  { n: "03", label: "Verify" },
+                ].map((step) => (
+                  <li
+                    key={step.n}
+                    className="rounded-xl border border-paper/12 bg-paper/5 px-2.5 py-2.5"
+                  >
+                    <p className="data-mono text-[10px] tracking-widest text-verified">
+                      {step.n}
+                    </p>
+                    <p className="mt-1 text-xs font-medium text-paper">
+                      {step.label}
+                    </p>
+                  </li>
+                ))}
+              </ol>
 
-            <div className="min-w-0 shrink-0">
               <DemoPanel onFill={fillDemo} onEnter={onDemo} busy={busy} dark />
             </div>
 
-            <div className="mt-auto flex shrink-0 items-end justify-between gap-4 border-t border-paper/10 pt-4">
-              <div className="min-w-0 rounded-xl border border-paper/15 bg-paper/5 px-3 py-2.5">
+            <div className="mt-auto flex shrink-0 items-end justify-between gap-4 border-t border-paper/10 pt-5">
+              <div className="min-w-0 flex-1 rounded-xl border border-paper/15 bg-paper/5 px-3 py-2.5">
                 <p className="data-mono text-[10px] uppercase tracking-widest text-paper/50">
                   Sample receipt
                 </p>

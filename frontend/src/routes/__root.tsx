@@ -93,13 +93,13 @@ function RootComponent() {
         <div
           className={cn(
             "flex min-h-screen flex-col",
-            isAuthShell && "lg:h-dvh lg:overflow-hidden",
+            isAuthShell && "xl:h-dvh xl:overflow-hidden",
           )}
         >
           {!isAuthShell && <SiteHeader />}
           <main
             className={cn(
-              isAuthShell ? "flex-1 lg:min-h-0 lg:overflow-hidden" : "flex-1",
+              isAuthShell ? "flex-1 xl:min-h-0 xl:overflow-hidden" : "flex-1",
             )}
           >
             <Outlet />
