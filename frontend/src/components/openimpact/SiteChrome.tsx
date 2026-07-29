@@ -103,25 +103,29 @@ export function SiteHeader() {
         </nav>
 
         <div className="relative z-10 flex shrink-0 items-center justify-end gap-2 sm:gap-3">
-          <button
-            type="button"
-            onClick={onConnect}
-            disabled={busy}
-            className="hidden rounded-full border border-input px-4 py-2 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-60 lg:block"
-          >
-            {busy ? (
-              "Connecting…"
-            ) : walletAddress ? (
-              <span className="data-mono text-xs">
-                {shortAddress(walletAddress)}
-              </span>
-            ) : (
-              "Connect wallet"
-            )}
-          </button>
-
           {account ? (
             <div className="hidden items-center gap-2 sm:flex">
+              <button
+                type="button"
+                onClick={onConnect}
+                disabled={busy}
+                title={
+                  walletAddress
+                    ? "Disconnect wallet"
+                    : "Connect the wallet used for on-chain donations (Sepolia via your browser wallet)"
+                }
+                className="rounded-full border border-input px-4 py-2 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-60"
+              >
+                {busy ? (
+                  "Connecting…"
+                ) : walletAddress ? (
+                  <span className="data-mono text-xs">
+                    {shortAddress(walletAddress)}
+                  </span>
+                ) : (
+                  "Connect wallet"
+                )}
+              </button>
               <Link
                 to={ROLE_HOME[account.role]}
                 className={cn(
@@ -189,24 +193,23 @@ export function SiteHeader() {
               </nav>
 
               <div className="mt-auto space-y-2 border-t border-border px-5 py-5">
-                <button
-                  type="button"
-                  onClick={async () => {
-                    await onConnect();
-                    setMenuOpen(false);
-                  }}
-                  disabled={busy}
-                  className="w-full rounded-full border border-input px-4 py-2.5 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-60"
-                >
-                  {busy
-                    ? "Connecting…"
-                    : walletAddress
-                      ? shortAddress(walletAddress)
-                      : "Connect wallet"}
-                </button>
-
                 {account ? (
                   <>
+                    <button
+                      type="button"
+                      onClick={async () => {
+                        await onConnect();
+                        setMenuOpen(false);
+                      }}
+                      disabled={busy}
+                      className="w-full rounded-full border border-input px-4 py-2.5 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-60"
+                    >
+                      {busy
+                        ? "Connecting…"
+                        : walletAddress
+                          ? shortAddress(walletAddress)
+                          : "Connect wallet"}
+                    </button>
                     <Link
                       to={ROLE_HOME[account.role]}
                       onClick={() => setMenuOpen(false)}

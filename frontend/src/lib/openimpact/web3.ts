@@ -17,6 +17,10 @@ import { openImpactAbi } from "./openimpact-abi";
 /**
  * Web3 layer for OpenImpact.
  *
+ * Same stack as the Solidity contract: Ethereum (Sepolia by default) via viem.
+ * Browser wallets (MetaMask, Rabby, etc.) inject `window.ethereum`; that is how
+ * users sign donate / confirm / proof txs. This is not account sign-in.
+ *
  * When `VITE_OPENIMPACT_CONTRACT_ADDRESS` is set, donate / confirm / proof /
  * publication hash calls hit the deployed contract. Otherwise stubs keep the
  * demo usable without a wallet or testnet.

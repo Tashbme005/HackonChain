@@ -8,7 +8,7 @@ import {
   UserRound,
   Wallet,
 } from "lucide-react";
-import { useState, type ReactNode } from "react";
+import { useEffect, useState, type ReactNode } from "react";
 import { toast } from "sonner";
 
 import { BrandLockup } from "@/components/openimpact/BrandLogo";
@@ -247,226 +247,239 @@ function AuthPage() {
         : "We couldn't find that invite link. Sign in below or create an account."
       : null;
 
-  return (
-    <div className="min-h-dvh bg-background lg:grid lg:h-dvh lg:grid-cols-2 lg:overflow-hidden">
-      {/* Form column: no scroll on large screens; register is compacted to fit */}
-      <div
+  // Lock the document on desktop so only the right panel scrolls.
+  useEffect(() => {
+    const mq = window.matchMedia("(min-width: 1024px)");
+    const apply = () => {
+      const lock = mq.matches;
+      document.documentElement.style.overflow = lock ? "hidden" : "";
+      document.body.style.overflow = lock ? "hidden" : "";
+    };
+    apply();
+    mq.addEventListener("change", apply);
+    return () => {
+      mq.removeEventListener("change", apply);
+      document.documentElement.style.overflow = "";
+      document.body.style.overflow = "";
+    };
+  }, []);
+
+  const formFields = (
+    <>
+      <h1
         className={cn(
-          "flex min-h-dvh flex-col px-5 py-5 sm:px-8 lg:h-full lg:min-h-0 lg:overflow-hidden lg:px-10 xl:px-12",
+          "font-display tracking-tight text-ink",
+          mode === "signup" ? "text-2xl sm:text-3xl" : "text-3xl sm:text-4xl",
         )}
       >
-        <BrandLockup className="shrink-0" />
+        {mode === "signin" ? "Welcome back" : "Create your account"}
+      </h1>
+      <p
+        className={cn(
+          "text-sm leading-relaxed text-muted-foreground",
+          mode === "signup" ? "mt-1.5" : "mt-2",
+        )}
+      >
+        {mode === "signin"
+          ? "Enter your email and password to open your seat on the ledger."
+          : "Pick a seat: donor, recipient, or organisation. Then fill in the basics."}
+      </p>
 
-        <div
+      {inviteProblem && (
+        <p
+          role="alert"
+          className="mt-3 rounded-xl border border-flagged/40 bg-flagged/10 px-3 py-2.5 text-sm text-flagged"
+        >
+          {inviteProblem}
+        </p>
+      )}
+
+      <div
+        className={cn(
+          "grid grid-cols-2 gap-1 rounded-full border border-border bg-muted/50 p-1",
+          mode === "signup" ? "mt-3.5" : "mt-5",
+        )}
+      >
+        <button
+          type="button"
+          onClick={() => {
+            setMode("signin");
+            setError(null);
+          }}
           className={cn(
-            "mx-auto flex w-full max-w-md flex-1 flex-col justify-center lg:mx-0 lg:max-w-lg",
-            mode === "signup" ? "py-2 lg:py-0" : "py-4 lg:py-0",
+            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            mode === "signin"
+              ? "bg-card text-ink shadow-sm"
+              : "text-muted-foreground hover:text-ink",
           )}
         >
-          <h1
-            className={cn(
-              "font-display tracking-tight text-ink",
-              mode === "signup"
-                ? "text-2xl sm:text-3xl"
-                : "text-3xl sm:text-4xl",
-            )}
-          >
-            {mode === "signin" ? "Welcome back" : "Create your account"}
-          </h1>
-          <p
-            className={cn(
-              "text-sm leading-relaxed text-muted-foreground",
-              mode === "signup" ? "mt-1.5" : "mt-2",
-            )}
-          >
-            {mode === "signin"
-              ? "Enter your email and password to open your seat on the ledger."
-              : "Pick a seat: donor, recipient, or organisation. Then fill in the basics."}
-          </p>
-
-          {inviteProblem && (
-            <p
-              role="alert"
-              className="mt-3 rounded-xl border border-flagged/40 bg-flagged/10 px-3 py-2.5 text-sm text-flagged"
-            >
-              {inviteProblem}
-            </p>
+          Sign in
+        </button>
+        <button
+          type="button"
+          onClick={() => {
+            setMode("signup");
+            setError(null);
+          }}
+          className={cn(
+            "rounded-full px-4 py-2 text-sm font-medium transition-colors",
+            mode === "signup"
+              ? "bg-card text-ink shadow-sm"
+              : "text-muted-foreground hover:text-ink",
           )}
+        >
+          Register
+        </button>
+      </div>
 
-          <div
-            className={cn(
-              "grid grid-cols-2 gap-1 rounded-full border border-border bg-muted/50 p-1",
-              mode === "signup" ? "mt-3.5" : "mt-5",
-            )}
-          >
+      <form
+        onSubmit={onSubmit}
+        className={cn(
+          mode === "signup" ? "mt-3.5 space-y-2.5" : "mt-5 space-y-4",
+        )}
+      >
+        {mode === "signup" && (
+          <fieldset>
+            <legend className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
+              Account type
+            </legend>
+            <div className="mt-2 grid grid-cols-3 gap-1.5">
+              {ROLES.map((r) => {
+                const Icon = r.icon;
+                const active = role === r.role;
+                return (
+                  <button
+                    type="button"
+                    key={r.role}
+                    aria-pressed={active}
+                    onClick={() => setRole(r.role)}
+                    className={cn(
+                      "rounded-xl border px-2 py-2 text-left transition-colors",
+                      active
+                        ? "border-ink bg-ink text-paper"
+                        : "border-border bg-card hover:border-ink/30",
+                    )}
+                  >
+                    <Icon className="size-3.5" aria-hidden />
+                    <p className="mt-1 text-[11px] font-medium sm:text-xs">
+                      {r.label}
+                    </p>
+                  </button>
+                );
+              })}
+            </div>
+          </fieldset>
+        )}
+
+        {mode === "signup" && role === "recipient" && (
+          <Hint icon={ShieldCheck} compact>
+            You get a <strong>pseudonym</strong> on the ledger. Your real name
+            stays private.
+          </Hint>
+        )}
+        {mode === "signup" && role === "donor" && (
+          <Hint icon={Wallet} compact>
+            You&apos;ll connect a <strong>wallet</strong> on your first
+            donation.
+          </Hint>
+        )}
+
+        {mode === "signup" && (
+          <Field
+            label={
+              role === "organisation" ? "Organisation name" : "Full name"
+            }
+            value={name}
+            onChange={setName}
+            placeholder={
+              role === "organisation" ? "Kilifi Water Trust" : "Amina Hassan"
+            }
+            compact
+          />
+        )}
+        <Field
+          label="Email"
+          type="email"
+          value={email}
+          onChange={setEmail}
+          placeholder="you@example.org"
+          compact={mode === "signup"}
+        />
+        <PasswordField
+          value={password}
+          onChange={setPassword}
+          show={showPassword}
+          onToggle={() => setShowPassword((v) => !v)}
+          compact={mode === "signup"}
+        />
+
+        {error && (
+          <p role="alert" className="text-sm text-flagged">
+            {error}
+          </p>
+        )}
+
+        <button
+          type="submit"
+          disabled={busy}
+          className={cn(
+            "w-full rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60",
+            mode === "signup" ? "py-2.5" : "py-3",
+          )}
+        >
+          {mode === "signup" ? "Create account" : "Sign in"}
+        </button>
+      </form>
+
+      <p
+        className={cn(
+          "text-center text-sm text-muted-foreground",
+          mode === "signup" ? "mt-3" : "mt-5",
+        )}
+      >
+        {mode === "signin" ? (
+          <>
+            Don&apos;t have an account?{" "}
             <button
               type="button"
-              onClick={() => {
-                setMode("signin");
-                setError(null);
-              }}
-              className={cn(
-                "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                mode === "signin"
-                  ? "bg-card text-ink shadow-sm"
-                  : "text-muted-foreground hover:text-ink",
-              )}
+              onClick={() => setMode("signup")}
+              className="font-medium text-verified underline-offset-4 hover:underline"
+            >
+              Register now
+            </button>
+          </>
+        ) : (
+          <>
+            Already have an account?{" "}
+            <button
+              type="button"
+              onClick={() => setMode("signin")}
+              className="font-medium text-verified underline-offset-4 hover:underline"
             >
               Sign in
             </button>
-            <button
-              type="button"
-              onClick={() => {
-                setMode("signup");
-                setError(null);
-              }}
-              className={cn(
-                "rounded-full px-4 py-2 text-sm font-medium transition-colors",
-                mode === "signup"
-                  ? "bg-card text-ink shadow-sm"
-                  : "text-muted-foreground hover:text-ink",
-              )}
-            >
-              Register
-            </button>
-          </div>
+          </>
+        )}
+      </p>
+    </>
+  );
 
-          <form
-            onSubmit={onSubmit}
-            className={cn(
-              mode === "signup" ? "mt-3.5 space-y-2.5" : "mt-5 space-y-4",
-            )}
-          >
-            {mode === "signup" && (
-              <fieldset>
-                <legend className="text-[10px] font-medium uppercase tracking-widest text-muted-foreground">
-                  Account type
-                </legend>
-                <div className="mt-2 grid grid-cols-3 gap-1.5">
-                  {ROLES.map((r) => {
-                    const Icon = r.icon;
-                    const active = role === r.role;
-                    return (
-                      <button
-                        type="button"
-                        key={r.role}
-                        aria-pressed={active}
-                        onClick={() => setRole(r.role)}
-                        className={cn(
-                          "rounded-xl border px-2 py-2 text-left transition-colors",
-                          active
-                            ? "border-ink bg-ink text-paper"
-                            : "border-border bg-card hover:border-ink/30",
-                        )}
-                      >
-                        <Icon className="size-3.5" aria-hidden />
-                        <p className="mt-1 text-[11px] font-medium sm:text-xs">
-                          {r.label}
-                        </p>
-                      </button>
-                    );
-                  })}
-                </div>
-              </fieldset>
-            )}
-
-            {mode === "signup" && role === "recipient" && (
-              <Hint icon={ShieldCheck} compact>
-                You get a <strong>pseudonym</strong> on the ledger. Your real
-                name stays private.
-              </Hint>
-            )}
-            {mode === "signup" && role === "donor" && (
-              <Hint icon={Wallet} compact>
-                You&apos;ll connect a <strong>wallet</strong> on your first
-                donation.
-              </Hint>
-            )}
-
-            {mode === "signup" && (
-              <Field
-                label={
-                  role === "organisation" ? "Organisation name" : "Full name"
-                }
-                value={name}
-                onChange={setName}
-                placeholder={
-                  role === "organisation" ? "Kilifi Water Trust" : "Amina Hassan"
-                }
-                compact
-              />
-            )}
-            <Field
-              label="Email"
-              type="email"
-              value={email}
-              onChange={setEmail}
-              placeholder="you@example.org"
-              compact={mode === "signup"}
-            />
-            <PasswordField
-              value={password}
-              onChange={setPassword}
-              show={showPassword}
-              onToggle={() => setShowPassword((v) => !v)}
-              compact={mode === "signup"}
-            />
-
-            {error && (
-              <p role="alert" className="text-sm text-flagged">
-                {error}
-              </p>
-            )}
-
-            <button
-              type="submit"
-              disabled={busy}
-              className={cn(
-                "w-full rounded-full bg-primary px-6 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60",
-                mode === "signup" ? "py-2.5" : "py-3",
-              )}
-            >
-              {mode === "signup" ? "Create account" : "Sign in"}
-            </button>
-          </form>
-
-          <p
-            className={cn(
-              "text-center text-sm text-muted-foreground",
-              mode === "signup" ? "mt-3" : "mt-5",
-            )}
-          >
-            {mode === "signin" ? (
-              <>
-                Don&apos;t have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setMode("signup")}
-                  className="font-medium text-verified underline-offset-4 hover:underline"
-                >
-                  Register now
-                </button>
-              </>
-            ) : (
-              <>
-                Already have an account?{" "}
-                <button
-                  type="button"
-                  onClick={() => setMode("signin")}
-                  className="font-medium text-verified underline-offset-4 hover:underline"
-                >
-                  Sign in
-                </button>
-              </>
-            )}
-          </p>
-
-          {/* Demo credentials on mobile */}
-          <div className="mt-6 lg:hidden">
+  return (
+    <>
+      {/* Mobile */}
+      <div className="flex min-h-dvh flex-col bg-background px-5 py-5 sm:px-8 lg:hidden">
+        <BrandLockup className="shrink-0" />
+        <div
+          className={cn(
+            "mx-auto flex w-full max-w-md flex-1 flex-col justify-center",
+            mode === "signup" ? "py-2" : "py-4",
+          )}
+        >
+          {formFields}
+          <div className="mt-4">
             <DemoPanel onFill={fillDemo} onEnter={onDemo} busy={busy} />
           </div>
         </div>
-
         <div className="mt-auto flex shrink-0 items-center justify-between gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
           <p>© {new Date().getFullYear()} OpenImpact</p>
           <Link to="/trust" className="underline-offset-4 hover:underline">
@@ -475,51 +488,94 @@ function AuthPage() {
         </div>
       </div>
 
-      {/* Brand panel: only this column scrolls on large screens */}
-      <aside className="relative hidden h-full min-h-0 overflow-y-auto overscroll-contain bg-ink text-paper lg:block">
-        <div
-          className="pointer-events-none absolute -right-20 top-16 size-64 rounded-full bg-verified/25 blur-3xl"
-          aria-hidden
-        />
-        <div
-          className="pointer-events-none absolute -bottom-16 left-8 size-56 rounded-full bg-verified/15 blur-3xl"
-          aria-hidden
-        />
-
-        <div className="relative flex min-h-full flex-col justify-between gap-6 p-8 xl:p-9">
-          <div className="shrink-0">
-            <h2 className="max-w-md font-display text-3xl leading-tight xl:text-[2.35rem]">
-              Every donation, a receipt you can verify.
-            </h2>
-            <p className="mt-2.5 max-w-sm text-sm leading-relaxed text-paper/70">
-              Sign in to follow proof of use, or open a demo seat with the
-              credentials below.
-            </p>
+      {/* Desktop: light canvas + floating rounded dark panel on the right */}
+      <div className="relative hidden h-dvh overflow-hidden bg-background lg:block">
+        <div className="absolute inset-y-0 left-0 z-10 flex w-[min(52%,34rem)] flex-col overflow-hidden px-10 py-7 xl:w-[min(50%,36rem)] xl:px-12 xl:py-8">
+          <BrandLockup className="shrink-0" />
+          <div
+            className={cn(
+              "flex min-h-0 flex-1 flex-col justify-center",
+              mode === "signup" ? "py-1" : "py-2",
+            )}
+          >
+            {formFields}
           </div>
-
-          <div className="min-w-0">
-            <DemoPanel onFill={fillDemo} onEnter={onDemo} busy={busy} dark />
-          </div>
-
-          <div className="flex shrink-0 items-center justify-between gap-4">
-            <div className="min-w-0 rounded-xl border border-paper/15 bg-paper/5 px-3.5 py-2.5">
-              <p className="data-mono text-[10px] uppercase tracking-widest text-paper/50">
-                Sample receipt
-              </p>
-              <p className="mt-1 font-display text-base text-paper">
-                $42 · Verified
-              </p>
-              <p className="mt-0.5 truncate text-xs text-paper/55">
-                Water filter · Kilifi · photo on file
-              </p>
-            </div>
-            <StampBadge status="verified" size="md" className="shrink-0" />
+          <div className="mt-auto flex shrink-0 items-center justify-between gap-4 border-t border-border pt-3 text-xs text-muted-foreground">
+            <p>© {new Date().getFullYear()} OpenImpact</p>
+            <Link to="/trust" className="underline-offset-4 hover:underline">
+              Privacy
+            </Link>
           </div>
         </div>
-      </aside>
-    </div>
+
+        <aside className="absolute inset-y-8 right-8 z-20 flex w-[min(44%,34rem)] flex-col overflow-hidden rounded-[1.5rem] bg-ink text-paper shadow-[0_24px_64px_oklch(0.25_0.03_214_/_0.22)] xl:inset-y-10 xl:right-10 xl:w-[min(46%,36rem)] xl:rounded-[1.75rem]">
+          <div
+            className="pointer-events-none absolute -right-12 top-12 size-52 rounded-full bg-verified/20 blur-3xl"
+            aria-hidden
+          />
+          <div
+            className="pointer-events-none absolute -bottom-10 left-8 size-44 rounded-full bg-verified/12 blur-3xl"
+            aria-hidden
+          />
+
+          <div className="relative flex h-full min-h-0 flex-col gap-5 overflow-y-auto overscroll-contain p-7 xl:gap-6 xl:p-8">
+            <div className="shrink-0">
+              <p className="data-mono text-[10px] uppercase tracking-[0.2em] text-verified">
+                On the ledger
+              </p>
+              <h2 className="mt-2 font-display text-2xl leading-tight xl:text-3xl">
+                Every donation, a receipt you can verify.
+              </h2>
+              <p className="mt-2 text-sm leading-relaxed text-paper/65">
+                Sign in to follow proof of use, or open a demo seat below.
+              </p>
+            </div>
+
+            <ol className="grid shrink-0 grid-cols-3 gap-2">
+              {[
+                { n: "01", label: "Donate" },
+                { n: "02", label: "Confirm" },
+                { n: "03", label: "Verify" },
+              ].map((step) => (
+                <li
+                  key={step.n}
+                  className="rounded-xl border border-paper/12 bg-paper/5 px-2.5 py-2.5"
+                >
+                  <p className="data-mono text-[10px] tracking-widest text-verified">
+                    {step.n}
+                  </p>
+                  <p className="mt-1 text-xs font-medium text-paper">
+                    {step.label}
+                  </p>
+                </li>
+              ))}
+            </ol>
+
+            <div className="min-w-0 shrink-0">
+              <DemoPanel onFill={fillDemo} onEnter={onDemo} busy={busy} dark />
+            </div>
+
+            <div className="mt-auto flex shrink-0 items-end justify-between gap-4 border-t border-paper/10 pt-4">
+              <div className="min-w-0 rounded-xl border border-paper/15 bg-paper/5 px-3 py-2.5">
+                <p className="data-mono text-[10px] uppercase tracking-widest text-paper/50">
+                  Sample receipt
+                </p>
+                <p className="mt-1 font-display text-base text-paper">
+                  $42 · Verified
+                </p>
+                <p className="mt-0.5 truncate text-xs text-paper/55">
+                  Water filter · Kilifi · photo on file
+                </p>
+              </div>
+              <StampBadge status="verified" size="md" className="shrink-0" />
+            </div>
+          </div>
+        </aside>
+      </div>
+    </>
   );
 }
+
 
 function DemoPanel({
   onFill,
@@ -535,43 +591,37 @@ function DemoPanel({
   return (
     <div
       className={cn(
-        "rounded-2xl border p-3.5 sm:p-4",
+        "rounded-xl border p-2.5",
         dark ? "border-paper/15 bg-paper/5" : "border-border bg-muted/40",
       )}
     >
-      <div className="flex flex-wrap items-baseline justify-between gap-x-3 gap-y-1">
-        <p className="data-mono text-[10px] uppercase tracking-[0.2em] text-verified">
-          Demo login details
+      <div className="flex items-center justify-between gap-2 px-0.5">
+        <p className="data-mono text-[10px] uppercase tracking-[0.18em] text-verified">
+          Demo logins
         </p>
         <p
           className={cn(
-            "text-xs",
+            "font-mono text-[10px]",
             dark ? "text-paper/70" : "text-muted-foreground",
           )}
         >
-          Password{" "}
-          <span
-            className={cn(
-              "font-mono",
-              dark ? "text-paper" : "text-ink",
-            )}
-          >
-            {DEMO_CREDENTIALS.donor.password}
-          </span>
+          {DEMO_CREDENTIALS.donor.password}
         </p>
       </div>
 
-      <ul className="mt-3 space-y-1.5">
+      <ul
+        className={cn(
+          "mt-2 divide-y overflow-hidden rounded-lg border",
+          dark ? "divide-paper/10 border-paper/10" : "divide-border border-border bg-card",
+        )}
+      >
         {ROLES.map((r) => {
           const creds = DEMO_CREDENTIALS[r.role];
           const Icon = r.icon;
           return (
             <li
               key={r.role}
-              className={cn(
-                "flex min-w-0 items-center gap-2 rounded-xl border px-2.5 py-2",
-                dark ? "border-paper/10 bg-ink/40" : "border-border bg-card",
-              )}
+              className="flex min-w-0 items-center gap-2 px-2 py-1.5"
             >
               <Icon
                 className={cn(
@@ -580,31 +630,31 @@ function DemoPanel({
                 )}
                 aria-hidden
               />
-              <div className="min-w-0 flex-1">
-                <p
+              <div className="min-w-0 flex-1 truncate leading-tight">
+                <span
                   className={cn(
-                    "truncate text-xs font-medium sm:text-sm",
+                    "text-xs font-medium",
                     dark ? "text-paper" : "text-ink",
                   )}
                 >
                   {r.label}
-                </p>
-                <p
+                </span>
+                <span
                   className={cn(
-                    "truncate font-mono text-[10px] sm:text-[11px]",
+                    "ml-1.5 font-mono text-[10px]",
                     dark ? "text-paper/55" : "text-muted-foreground",
                   )}
                 >
                   {creds.email}
-                </p>
+                </span>
               </div>
-              <div className="flex shrink-0 items-center gap-1.5">
+              <div className="flex shrink-0 items-center gap-1">
                 <button
                   type="button"
                   disabled={busy}
                   onClick={() => onFill(r.role)}
                   className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px] font-medium transition-colors",
+                    "rounded-full px-2 py-0.5 text-[10px] font-medium transition-colors",
                     dark
                       ? "border border-paper/25 text-paper hover:bg-paper/10"
                       : "border border-border text-ink hover:bg-accent",
@@ -617,7 +667,7 @@ function DemoPanel({
                   disabled={busy}
                   onClick={() => onEnter(r.role)}
                   className={cn(
-                    "rounded-full px-2.5 py-1 text-[11px] font-medium transition-opacity hover:opacity-90",
+                    "rounded-full px-2 py-0.5 text-[10px] font-medium transition-opacity hover:opacity-90",
                     dark
                       ? "bg-verified text-verified-foreground"
                       : "bg-primary text-primary-foreground",

@@ -12,6 +12,7 @@ import { Toaster } from "sonner";
 import { LedgerProvider } from "@/lib/openimpact/store";
 import { GetInTouch } from "@/components/openimpact/GetInTouch";
 import { SiteFooter, SiteHeader } from "@/components/openimpact/SiteChrome";
+import { cn } from "@/lib/utils";
 
 function NotFoundComponent() {
   return (
@@ -89,9 +90,18 @@ function RootComponent() {
   return (
     <QueryClientProvider client={queryClient}>
       <LedgerProvider>
-        <div className="flex min-h-screen flex-col">
+        <div
+          className={cn(
+            "flex min-h-screen flex-col",
+            isAuthShell && "lg:h-dvh lg:overflow-hidden",
+          )}
+        >
           {!isAuthShell && <SiteHeader />}
-          <main className="flex-1">
+          <main
+            className={cn(
+              isAuthShell ? "flex-1 lg:min-h-0 lg:overflow-hidden" : "flex-1",
+            )}
+          >
             <Outlet />
           </main>
           {!isAuthShell && (
