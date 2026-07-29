@@ -1,11 +1,11 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { BadgeCheck, Camera, HandCoins } from "lucide-react";
+import { AlertTriangle, BadgeCheck, Camera, HandCoins, Loader2 } from "lucide-react";
 import { useRef, useState } from "react";
 import { toast } from "sonner";
 
-import { StampBadge, StatusPill } from "@/components/trustflow/StampBadge";
-import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/trustflow/store";
-import { runAiProofCheck, shortAddress, submitToChain } from "@/lib/trustflow/web3";
+import { StampBadge, StatusPill } from "@/components/openimpact/StampBadge";
+import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/openimpact/store";
+import { runAiProofCheck, shortAddress, submitToChain } from "@/lib/openimpact/web3";
 
 export const Route = createFileRoute("/recipient")({
   head: () => ({
@@ -16,7 +16,7 @@ export const Route = createFileRoute("/recipient")({
         content:
           "The recipient's seat: two big buttons — confirm the money arrived, and upload a photo of what it bought — plus every submission you've made and your record so far.",
       },
-      { property: "og:title", content: "Recipient profile — TrustFlow" },
+ { property: "og:title", content: "Recipient profile — openImpact" },
       {
         property: "og:description",
         content: "Confirm funds, upload proof of use, and build a record donors can check.",
@@ -50,6 +50,7 @@ function RecipientProfile() {
   const [testimonial, setTestimonial] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
+  const [uploadError, setUploadError] = useState<string | null>(null);
   /** Which donation this upload answers for. "general" = org page content. */
   const [target, setTarget] = useState<string>("");
 
@@ -82,56 +83,63 @@ function RecipientProfile() {
   async function onSubmitProof(e: React.FormEvent) {
     e.preventDefault();
     if (!description.trim()) return;
+    setUploadError(null);
     setBusy(true);
-    const image = photoUrl ?? SAMPLE_PHOTO;
-    const draft = {
-      photoUrl: image,
-      description: description.trim(),
-      testimonial: testimonial.trim(),
-      submittedAt: new Date().toISOString(),
-    };
+    try {
+      const image = photoUrl ?? SAMPLE_PHOTO;
+      const draft = {
+        photoUrl: image,
+        description: description.trim(),
+        testimonial: testimonial.trim(),
+        submittedAt: new Date().toISOString(),
+      };
 
-    // Lightweight reuse check: same image bytes as an earlier upload of mine.
-    const seenBefore = myProofs.some((p) => p.photoUrl === image);
-    const check = await runAiProofCheck({
-      ...draft,
-      amount: targetDonation?.amount,
-      currency: targetDonation?.currency,
-      seenBefore,
-    });
-    const reviewed = {
-      ...draft,
-      flagged: check.flagged,
-      aiChecked: check.checked,
-      aiReason: check.reason,
-      aiInternalNote: check.internalNote,
-    };
+      // Lightweight reuse check: same image bytes as an earlier upload of mine.
+      const seenBefore = myProofs.some((p) => p.photoUrl === image);
+      const check = await runAiProofCheck({
+        ...draft,
+        amount: targetDonation?.amount,
+        currency: targetDonation?.currency,
+        seenBefore,
+      });
+      const reviewed = {
+        ...draft,
+        flagged: check.flagged,
+        aiChecked: check.checked,
+        aiReason: check.reason,
+        aiInternalNote: check.internalNote,
+      };
 
-    if (targetId === "general") {
-      // Secondary case: no donation attached, so it becomes org page content.
-      if (me?.orgId) {
-        await submitToChain({ action: "attachGeneralProof", recipientId: currentRecipientId });
-        attachGeneralProof(currentRecipientId, me.orgId, reviewed);
+      if (targetId === "general") {
+        if (me?.orgId) {
+          await submitToChain({ action: "attachGeneralProof", recipientId: currentRecipientId });
+          attachGeneralProof(currentRecipientId, me.orgId, reviewed);
+        }
+      } else {
+        await submitToChain({ action: "attachProof", donationId: targetId });
+        attachProofToDonation(targetId, reviewed);
       }
-    } else {
-      await submitToChain({ action: "attachProof", donationId: targetId });
-      attachProofToDonation(targetId, reviewed);
-    }
 
-    setBusy(false);
-    setDescription("");
-    setTestimonial("");
-    setPhotoUrl(null);
-    if (check.flagged) {
-      toast.error(
-        check.reason ?? "Uploaded, but our automated check flagged this photo for review.",
-      );
-    } else {
-      toast.success(
-        targetId === "general"
-          ? "Posted to your organisation's public page."
-          : `Checked and uploaded. ${donorLabel} will see this against their donation.`,
-      );
+      setBusy(false);
+      setDescription("");
+      setTestimonial("");
+      setPhotoUrl(null);
+      if (check.flagged) {
+        toast.error(
+          check.reason ?? "Uploaded, but our automated check flagged this photo for review.",
+        );
+      } else {
+        toast.success(
+          targetId === "general"
+            ? "Posted to your organisation's public page."
+            : `Checked and uploaded. ${donorLabel} will see this against their donation.`,
+        );
+      }
+    } catch {
+      setBusy(false);
+      const msg = "Something went wrong uploading your proof. Please try again.";
+      setUploadError(msg);
+      toast.error(msg);
     }
   }
 
@@ -156,14 +164,30 @@ function RecipientProfile() {
             {org ? `${org.name} · ` : ""}
             {me.story}
           </p>
-          <p className="data-mono mt-2 text-xs text-muted-foreground">
-            {me.pseudonym} · {shortAddress(me.walletAddress)}
-          </p>
-          <p className="mt-2 max-w-md text-xs text-muted-foreground">
-            Your real name is only shown here, to you. Everyone else — including{" "}
-            {org?.name ?? "your organisation"} — sees{" "}
-            <span className="data-mono">{me.pseudonym}</span> and your wallet address.
-          </p>
+            <p className="data-mono mt-2 text-xs text-muted-foreground">
+              {me.pseudonym} · {shortAddress(me.walletAddress)}
+            </p>
+            <details className="mt-3 max-w-md text-xs text-muted-foreground">
+              <summary className="cursor-pointer font-medium text-foreground hover:underline">
+                What are a pseudonym and wallet address?
+              </summary>
+              <div className="mt-2 space-y-2 border-l-2 border-verified pl-3">
+                <p>
+                  <strong className="text-foreground">Pseudonym</strong> — a randomly generated name
+                  like <span className="data-mono">{me.pseudonym}</span> that protects your real
+                  identity. Organisations, donors and the public only ever see this.
+                </p>
+                <p>
+                  <strong className="text-foreground">Wallet address</strong> — a public account
+                  number on the blockchain (<span className="data-mono">{shortAddress(me.walletAddress)}</span>).
+                  Funds settle here. It's not your name and can't identify you on its own.
+                </p>
+                <p>
+                  Your real name is only shown here, to you. Everyone else — including{" "}
+                  {org?.name ?? "your organisation"} — sees your pseudonym and wallet address.
+                </p>
+              </div>
+            </details>
         </div>
         {established && (
           <span className="inline-flex items-center gap-1.5 rounded-full bg-verified-soft px-3 py-1.5 text-xs font-medium text-verified">
@@ -346,7 +370,16 @@ function RecipientProfile() {
           A photo, a sentence about what you bought, and a thank-you if you'd like. That's it.
         </p>
 
-        <form onSubmit={onSubmitProof} className="mt-5 space-y-6 border border-border bg-card p-6">
+        <form onSubmit={onSubmitProof} className="relative mt-5 space-y-6 border border-border bg-card p-6">
+          {busy && (
+            <div className="absolute inset-0 z-10 flex items-center justify-center bg-card/80 backdrop-blur-sm">
+              <div className="text-center">
+                <Loader2 className="mx-auto size-8 animate-spin text-verified" />
+                <p className="mt-3 text-sm font-medium">Checking your photo for authenticity…</p>
+                <p className="mt-1 text-xs text-muted-foreground">This usually takes a few seconds.</p>
+              </div>
+            </div>
+          )}
           <label className="block">
             <span className="text-sm font-medium">Which donation is this for?</span>
             <select
@@ -444,6 +477,16 @@ function RecipientProfile() {
             signs of editing, and whether a receipt matches the amount claimed. If something looks
             off, the receipt is flagged for review rather than quietly approved.
           </p>
+
+          {uploadError && (
+            <div className="flex gap-3 border border-flagged/40 bg-flagged-soft p-4 text-sm">
+              <AlertTriangle className="mt-0.5 size-4 shrink-0 text-flagged" />
+              <div>
+                <p className="font-medium text-flagged">{uploadError}</p>
+                <p className="mt-1 text-xs text-muted-foreground">Your photo and text are still here — just press Upload again.</p>
+              </div>
+            </div>
+          )}
 
           <button
             type="submit"

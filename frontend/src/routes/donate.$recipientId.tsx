@@ -1,23 +1,24 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
 import { useState } from "react";
 
-import { StampBadge } from "@/components/trustflow/StampBadge";
-import { ReceiptShell } from "@/components/trustflow/ReceiptCard";
-import { formatAmount, formatStamp, useLedger } from "@/lib/trustflow/store";
-import { connectWallet, mockTxHash, shortAddress, submitToChain } from "@/lib/trustflow/web3";
-import { recipientPublicLabel } from "@/lib/trustflow/types";
-import type { Donation } from "@/lib/trustflow/types";
+import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
+import { StampBadge } from "@/components/openimpact/StampBadge";
+import { ReceiptShell } from "@/components/openimpact/ReceiptCard";
+import { formatAmount, formatStamp, useLedger } from "@/lib/openimpact/store";
+import { connectWallet, mockTxHash, shortAddress, submitToChain } from "@/lib/openimpact/web3";
+import { recipientPublicLabel } from "@/lib/openimpact/types";
+import type { Donation } from "@/lib/openimpact/types";
 
 export const Route = createFileRoute("/donate/$recipientId")({
   head: () => ({
     meta: [
-      { title: "Send a donation — TrustFlow" },
+      { title: "Send a donation — openImpact" },
       {
         name: "description",
         content:
           "Connect a wallet, choose an amount, and send a donation that comes back to you as a tracked receipt with proof of use.",
       },
-      { property: "og:title", content: "Send a donation — TrustFlow" },
+      { property: "og:title", content: "Send a donation — openImpact" },
       {
         property: "og:description",
         content: "Choose an amount, give publicly or anonymously, and follow the money after it lands.",
@@ -89,6 +90,14 @@ function DonateFlow() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-12">
+      <Breadcrumbs
+        crumbs={[
+          { label: "Causes", to: "/" },
+          ...(org ? [{ label: org.name, to: `/cause/${org.id}` }] : []),
+          { label: `Donate to ${recipientPublicLabel(recipient)}` },
+        ]}
+        className="mb-6"
+      />
       <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
         Step {step === "amount" ? "1" : step === "confirm" ? "2" : "3"} of 3
       </p>
@@ -107,14 +116,21 @@ function DonateFlow() {
                 <span className="data-mono text-foreground">{shortAddress(walletAddress)}</span>
               </p>
             ) : (
-              <button
-                type="button"
-                onClick={onConnect}
-                disabled={busy}
-                className="mt-3 rounded-full border border-input px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-60"
-              >
-                {busy ? "Connecting…" : "Connect wallet"}
-              </button>
+              <>
+                <button
+                  type="button"
+                  onClick={onConnect}
+                  disabled={busy}
+                  className="mt-3 inline-flex items-center gap-2 rounded-full border border-input px-5 py-2.5 text-sm font-medium transition-colors hover:bg-accent disabled:opacity-60"
+                >
+                  {busy && <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+                  {busy ? "Connecting to your wallet…" : "Connect wallet"}
+                </button>
+                <p className="mt-2 max-w-md text-xs text-muted-foreground">
+                  A wallet is like a public account for sending and receiving funds. If you don't have
+                  one yet, connecting will walk you through creating one.
+                </p>
+              </>
             )}
           </div>
 
@@ -209,9 +225,10 @@ function DonateFlow() {
                   type="button"
                   onClick={onSend}
                   disabled={busy}
-                  className="rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
+                  className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
                 >
-                  {busy ? "Sending…" : `Send ${formatAmount(amount, "USDC")}`}
+                  {busy && <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+                  {busy ? "Submitting to the ledger…" : `Send ${formatAmount(amount, "USDC")}`}
                 </button>
                 <button
                   type="button"

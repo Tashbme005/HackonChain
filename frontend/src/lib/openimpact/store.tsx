@@ -15,7 +15,7 @@ import { mockTxHash } from "./web3";
 import type { Donation, Organisation, ProofOfUse, PublicationProof, Recipient } from "./types";
 import { isFullyAccounted } from "./types";
 
-const STORAGE_KEY = "trustflow.state.v7";
+const STORAGE_KEY = "openimpact.state.v7";
 
 export type Role = "donor" | "recipient" | "organisation";
 
@@ -44,7 +44,7 @@ export interface Account {
 const DEMO_ACCOUNTS: Account[] = [
   {
     id: "acc-demo-donor",
-    email: "demo.donor@trustflow.app",
+    email: "demo.donor@openimpact.app",
     password: "demo",
     name: CURRENT_DONOR_NAME,
     role: "donor",
@@ -55,7 +55,7 @@ const DEMO_ACCOUNTS: Account[] = [
   },
   {
     id: "acc-demo-recipient",
-    email: "demo.recipient@trustflow.app",
+    email: "demo.recipient@openimpact.app",
     password: "demo",
     name: "Amina Hassan",
     role: "recipient",
@@ -66,7 +66,7 @@ const DEMO_ACCOUNTS: Account[] = [
   },
   {
     id: "acc-demo-org",
-    email: "demo.org@trustflow.app",
+    email: "demo.org@openimpact.app",
     password: "demo",
     name: "Kilifi Water Trust",
     role: "organisation",
@@ -100,8 +100,8 @@ export interface RecipientInvite {
 }
 
 const PSEUDONYM_WORDS = [
-  "Coral","Baobab","Kestrel","Marigold","Almendro","Harbour","Tamarind","Juniper",
-  "Cinder","Meridian","Saffron","Pelican","Quartz","Willow","Anchor","Lantern",
+  "Coral", "Baobab", "Kestrel", "Marigold", "Almendro", "Harbour", "Tamarind", "Juniper",
+  "Cinder", "Meridian", "Saffron", "Pelican", "Quartz", "Willow", "Anchor", "Lantern",
 ];
 
 /** Pseudonyms are the ONLY recipient identity organisations ever receive. */
@@ -388,36 +388,36 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
         const recipients =
           role === "recipient"
             ? [
-                ...s.recipients,
-                {
-                  id: account.entityId!,
-                  name: account.name,
-                  pseudonym,
-                  orgId: linkedOrgId,
-                  story: "Tell donors what you're raising for — you can edit this any time.",
-                  walletAddress: wallet,
-                  proofOfUse: null,
-                  reputationScore: 50,
-                } satisfies Recipient,
-              ]
+              ...s.recipients,
+              {
+                id: account.entityId!,
+                name: account.name,
+                pseudonym,
+                orgId: linkedOrgId,
+                story: "Tell donors what you're raising for — you can edit this any time.",
+                walletAddress: wallet,
+                proofOfUse: null,
+                reputationScore: 50,
+              } satisfies Recipient,
+            ]
             : s.recipients;
 
         let organisations =
           role === "organisation"
             ? [
-                ...s.organisations,
-                {
-                  id: account.entityId!,
-                  name: account.name,
-                  tagline: "A new organisation on TrustFlow",
-                  description:
-                    "Add a description of your work so donors know what their money pays for.",
-                  imageUrl: "",
-                  walletAddress: wallet,
-                  reputationScore: 50,
-                  recipientIds: [],
-                } satisfies Organisation,
-              ]
+              ...s.organisations,
+              {
+                id: account.entityId!,
+                name: account.name,
+                  tagline: "A new organisation on openImpact",
+                description:
+                  "Add a description of your work so donors know what their money pays for.",
+                imageUrl: "",
+                walletAddress: wallet,
+                reputationScore: 50,
+                recipientIds: [],
+              } satisfies Organisation,
+            ]
             : s.organisations;
 
         if (linkedOrgId) {
@@ -431,16 +431,16 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
         // Claiming a slot records ONLY the pseudonym + wallet against it.
         const invites = invite
           ? s.invites.map((i) =>
-              i.code === invite.code
-                ? {
-                    ...i,
-                    usedByAccountId: id,
-                    claimedPseudonym: pseudonym,
-                    claimedWallet: wallet,
-                    claimedAt: new Date().toISOString(),
-                  }
-                : i,
-            )
+            i.code === invite.code
+              ? {
+                ...i,
+                usedByAccountId: id,
+                claimedPseudonym: pseudonym,
+                claimedWallet: wallet,
+                claimedAt: new Date().toISOString(),
+              }
+              : i,
+          )
           : s.invites;
 
         return {
@@ -553,11 +553,11 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
     const donorProfile: DonorProfile =
       account && account.role === "donor"
         ? {
-            name: account.name,
-            walletAddress: account.walletAddress,
-            memberSince: account.createdAt,
-            location: account.location ?? "Somewhere on the internet",
-          }
+          name: account.name,
+          walletAddress: account.walletAddress,
+          memberSince: account.createdAt,
+          location: account.location ?? "Somewhere on the internet",
+        }
         : DONOR_PROFILE;
 
     return {

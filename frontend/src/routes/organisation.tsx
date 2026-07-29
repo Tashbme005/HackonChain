@@ -3,10 +3,10 @@ import { ArrowDownLeft, ArrowUpRight, BadgeCheck, Copy, Link2, Trash2 } from "lu
 import { useState } from "react";
 import { toast } from "sonner";
 
-import { PublicationPanel } from "@/components/trustflow/PublicationPanel";
-import { StampBadge } from "@/components/trustflow/StampBadge";
-import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/trustflow/store";
-import { shortAddress } from "@/lib/trustflow/web3";
+import { PublicationPanel } from "@/components/openimpact/PublicationPanel";
+import { StampBadge } from "@/components/openimpact/StampBadge";
+import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/openimpact/store";
+import { shortAddress } from "@/lib/openimpact/web3";
 import {
   PUBLICATION_STATUS_LABEL,
   STATUS_LABEL,
@@ -15,7 +15,7 @@ import {
   publicationStatus,
   recipientPublicLabel,
   shortWallet,
-} from "@/lib/trustflow/types";
+} from "@/lib/openimpact/types";
 
 
 export const Route = createFileRoute("/organisation")({
@@ -27,7 +27,7 @@ export const Route = createFileRoute("/organisation")({
         content:
           "The organisation's seat: incoming donations beside outgoing disbursements, every linked recipient's status, and the public summary card donors see.",
       },
-      { property: "og:title", content: "Organisation console — TrustFlow" },
+      { property: "og:title", content: "Organisation console — openImpact" },
       {
         property: "og:description",
         content: "Money in, money out, and who proved what — scannable at a glance.",
@@ -93,95 +93,113 @@ function OrganisationConsole() {
 
       {/* Fund flow, side by side. */}
       <section className="mt-10 grid gap-6 lg:grid-cols-2">
-        <div className="border border-border bg-card">
-          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-            <ArrowDownLeft className="size-4 text-verified" aria-hidden />
-            <h2 className="text-lg">Incoming donations</h2>
-            <span className="data-mono ml-auto text-sm">{formatAmount(incoming, "USDC")}</span>
+        {rows.length === 0 ? (
+          <div className="col-span-2 border border-dashed border-input p-10 text-center">
+            <p className="font-display text-xl">No donations yet</p>
+            <p className="mt-2 text-sm text-muted-foreground">
+              Once donors start giving to your cause, incoming and outgoing transactions will appear here.
+            </p>
+            <Link
+              to="/cause/$orgId"
+              params={{ orgId: org.id }}
+              className="mt-5 inline-block text-sm font-medium underline-offset-4 hover:underline"
+            >
+              View your public cause page
+            </Link>
           </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[420px] text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-muted-foreground">
-                  <Th>Receipt</Th>
-                  <Th>Donor</Th>
-                  <Th className="text-right">Amount</Th>
-                  <Th>Sent</Th>
-                </tr>
-              </thead>
-              <tbody>
-                {rows.map((d) => (
-                  <tr key={d.id} className="border-b border-border last:border-0">
-                    <Td className="data-mono text-xs">{d.id}</Td>
-                    <Td>{d.isPublic ? d.donorName : "Anonymous"}</Td>
-                    <Td className="data-mono text-right">{formatAmount(d.amount, d.currency)}</Td>
-                    <Td className="data-mono text-xs">{formatStamp(d.timestamp).slice(0, 10)}</Td>
-                  </tr>
-                ))}
-              </tbody>
-            </table>
-          </div>
-        </div>
-
-        <div className="border border-border bg-card">
-          <div className="flex items-center gap-2 border-b border-border px-4 py-3">
-            <ArrowUpRight className="size-4 text-pending" aria-hidden />
-            <h2 className="text-lg">Outgoing to recipients</h2>
-            <span className="data-mono ml-auto text-sm">{formatAmount(disbursed, "USDC")}</span>
-          </div>
-          <div className="overflow-x-auto">
-            <table className="w-full min-w-[460px] text-sm">
-              <thead>
-                <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-muted-foreground">
-                  <Th>Recipient</Th>
-                  <Th className="text-right">Amount</Th>
-                  <Th>Status</Th>
-                  <Th>Publication</Th>
-                  <Th />
-                </tr>
-              </thead>
-              <tbody>
-                {outgoing.map((d) => {
-                  const r = getRecipient(d.recipientId);
-                  return (
-                    <tr key={d.id} className="border-b border-border last:border-0">
-                      <Td>{recipientPublicLabel(r, "—")}</Td>
-                      <Td className="data-mono text-right">{formatAmount(d.amount, d.currency)}</Td>
-                      <Td>
-                        <span className="flex items-center gap-2">
-                          <StampBadge status={d.status} size="sm" />
-                          <span className="whitespace-nowrap text-xs">
-                            {STATUS_LABEL[d.status]}
-                          </span>
-                        </span>
-                      </Td>
-                      <Td>
-                        <span
-                          className={`whitespace-nowrap text-xs ${
-                            publicationStatus(d) === "published"
-                              ? "text-verified"
-                              : "text-pending-foreground"
-                          }`}
-                        >
-                          {PUBLICATION_STATUS_LABEL[publicationStatus(d)]}
-                        </span>
-                      </Td>
-                      <Td>
-                        <Link
-                          to="/proof/$donationId"
-                          params={{ donationId: d.id }}
-                          className="whitespace-nowrap text-xs font-medium underline-offset-4 hover:underline"
-                        >
-                          Receipt
-                        </Link>
-                      </Td>
+        ) : (
+          <>
+            <div className="border border-border bg-card">
+              <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+                <ArrowDownLeft className="size-4 text-verified" aria-hidden />
+                <h2 className="text-lg">Incoming donations</h2>
+                <span className="data-mono ml-auto text-sm">{formatAmount(incoming, "USDC")}</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[420px] text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-muted-foreground">
+                      <Th>Receipt</Th>
+                      <Th>Donor</Th>
+                      <Th className="text-right">Amount</Th>
+                      <Th>Sent</Th>
                     </tr>
-                  );
-                })}
-              </tbody>
-            </table>
-          </div>
-        </div>
+                  </thead>
+                  <tbody>
+                    {rows.map((d) => (
+                      <tr key={d.id} className="border-b border-border last:border-0">
+                        <Td className="data-mono text-xs">{d.id}</Td>
+                        <Td>{d.isPublic ? d.donorName : "Anonymous"}</Td>
+                        <Td className="data-mono text-right">{formatAmount(d.amount, d.currency)}</Td>
+                        <Td className="data-mono text-xs">{formatStamp(d.timestamp).slice(0, 10)}</Td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+
+            <div className="border border-border bg-card">
+              <div className="flex items-center gap-2 border-b border-border px-4 py-3">
+                <ArrowUpRight className="size-4 text-pending" aria-hidden />
+                <h2 className="text-lg">Outgoing to recipients</h2>
+                <span className="data-mono ml-auto text-sm">{formatAmount(disbursed, "USDC")}</span>
+              </div>
+              <div className="overflow-x-auto">
+                <table className="w-full min-w-[460px] text-sm">
+                  <thead>
+                    <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-muted-foreground">
+                      <Th>Recipient</Th>
+                      <Th className="text-right">Amount</Th>
+                      <Th>Status</Th>
+                      <Th>Publication</Th>
+                      <Th />
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {outgoing.map((d) => {
+                      const r = getRecipient(d.recipientId);
+                      return (
+                        <tr key={d.id} className="border-b border-border last:border-0">
+                          <Td>{recipientPublicLabel(r, "—")}</Td>
+                          <Td className="data-mono text-right">{formatAmount(d.amount, d.currency)}</Td>
+                          <Td>
+                            <span className="flex items-center gap-2">
+                              <StampBadge status={d.status} size="sm" />
+                              <span className="whitespace-nowrap text-xs">
+                                {STATUS_LABEL[d.status]}
+                              </span>
+                            </span>
+                          </Td>
+                          <Td>
+                            <span
+                              className={`whitespace-nowrap text-xs ${
+                                publicationStatus(d) === "published"
+                                  ? "text-verified"
+                                  : "text-pending-foreground"
+                              }`}
+                            >
+                              {PUBLICATION_STATUS_LABEL[publicationStatus(d)]}
+                            </span>
+                          </Td>
+                          <Td>
+                            <Link
+                              to="/proof/$donationId"
+                              params={{ donationId: d.id }}
+                              className="whitespace-nowrap text-xs font-medium underline-offset-4 hover:underline"
+                            >
+                              Receipt
+                            </Link>
+                          </Td>
+                        </tr>
+                      );
+                    })}
+                  </tbody>
+                </table>
+              </div>
+            </div>
+          </>
+        )}
       </section>
 
       <PublicationPanel orgId={org.id} />

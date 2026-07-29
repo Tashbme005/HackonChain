@@ -1,20 +1,20 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { useLedger } from "@/lib/trustflow/store";
-import { StampBadge } from "@/components/trustflow/StampBadge";
-import { DemoSimulator } from "@/components/trustflow/DemoSimulator";
-import { shortAddress } from "@/lib/trustflow/web3";
+import { useLedger } from "@/lib/openimpact/store";
+import { StampBadge } from "@/components/openimpact/StampBadge";
+import { DemoSimulator } from "@/components/openimpact/DemoSimulator";
+import { shortAddress } from "@/lib/openimpact/web3";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
-      { title: "TrustFlow — see exactly where your donation went" },
+ { title: "openImpact — see exactly where your donation went" },
       {
         name: "description",
         content:
           "Give to causes and follow every dollar: each donation becomes a receipt with a status, a timestamp and proof of use uploaded by the person who received it.",
       },
-      { property: "og:title", content: "TrustFlow — see exactly where your donation went" },
+ { property: "og:title", content: "openImpact — see exactly where your donation went" },
       {
         property: "og:description",
         content: "A wallet-based donation ledger with photo, receipt and testimonial proof of use.",
@@ -40,7 +40,7 @@ function Landing() {
               Every donation, a receipt you can verify.
             </h1>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground">
-              Most giving ends at "thank you." TrustFlow keeps going: you see when the money
+ Most giving ends at "thank you." openImpact keeps going: you see when the money
               arrives, who received it, what they bought, and the photo and receipt that prove it.
               Transparency you can see, not just promise.
             </p>

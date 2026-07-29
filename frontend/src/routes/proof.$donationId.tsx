@@ -2,20 +2,21 @@ import { createFileRoute, Link } from "@tanstack/react-router";
 import { Copy } from "lucide-react";
 import { toast } from "sonner";
 
-import { StampBadge, StatusPill } from "@/components/trustflow/StampBadge";
-import { formatAmount, formatStamp, useLedger } from "@/lib/trustflow/store";
-import { STATUS_LABEL, recipientPublicLabel } from "@/lib/trustflow/types";
+import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
+import { StampBadge, StatusPill } from "@/components/openimpact/StampBadge";
+import { formatAmount, formatStamp, useLedger } from "@/lib/openimpact/store";
+import { STATUS_LABEL, recipientPublicLabel } from "@/lib/openimpact/types";
 
 export const Route = createFileRoute("/proof/$donationId")({
   head: () => ({
     meta: [
-      { title: "Donation receipt — TrustFlow" },
+      { title: "Donation receipt — openImpact" },
       {
         name: "description",
         content:
           "A public receipt: who gave, how much, what it paid for, and the photo and testimonial that prove it.",
       },
-      { property: "og:title", content: "Donation receipt — TrustFlow" },
+      { property: "og:title", content: "Donation receipt — openImpact" },
       {
         property: "og:description",
         content: "See the proof of use behind this donation — photo, description and testimonial.",
@@ -49,11 +50,19 @@ function ProofPage() {
 
   return (
     <div className="mx-auto max-w-2xl px-5 py-12">
+      <Breadcrumbs
+        crumbs={[
+          { label: "Causes", to: "/" },
+          ...(org ? [{ label: org.name, to: `/cause/${org.id}` }] : []),
+          { label: `Receipt ${donation.id}` },
+        ]}
+        className="mb-6"
+      />
       <div className="receipt-edge border border-border bg-card px-6 pb-8 pt-9 sm:px-9">
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="data-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              TrustFlow receipt · {donation.id}
+              openImpact receipt · {donation.id}
             </p>
             <h1 className="mt-2 text-3xl leading-tight sm:text-4xl">
               {donation.isPublic ? donation.donorName : "Anonymous"} gave{" "}
@@ -138,6 +147,27 @@ function ProofPage() {
             </p>
           )}
         </div>
+
+        {/* Auto-generated impact summary — sharable as a social card or link */}
+        {proof && !proof.flagged && (
+          <div className="dotted-rule mt-7 border border-verified/30 bg-verified-soft/40 p-5 pt-5">
+            <p className="text-[11px] uppercase tracking-[0.2em] text-verified">
+              Impact report · shareable
+            </p>
+            <p className="mt-2 font-display text-lg leading-snug">
+              {donorLabel} donated{" "}
+              <span className="data-mono">{formatAmount(donation.amount, donation.currency)}</span>{" "}
+              to {recipientPublicLabel(recipient)}
+              {org ? ` through ${org.name}` : ""} — and it paid for real, verified goods.
+            </p>
+            {proof.testimonial && (
+              <p className="mt-2 text-sm text-muted-foreground">
+                "{proof.testimonial}" — {recipientPublicLabel(recipient)}
+              </p>
+            )}
+            {/* TODO: web3 team — generate an on-chain attestation link here */}
+          </div>
+        )}
 
         <div className="dotted-rule mt-7 flex flex-wrap items-center gap-3 pt-6">
           <button

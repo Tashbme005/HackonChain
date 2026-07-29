@@ -1,4 +1,4 @@
-# Contributing to HackonChain — TrustFlow
+# Contributing to HackonChain — openImpact
 
 Thanks for your interest in contributing! This guide covers how to get involved during (and after) the hackathon.
 
