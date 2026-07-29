@@ -111,7 +111,7 @@ function DonateFlow() {
   }
 
   return (
-    <div className="mx-auto max-w-3xl px-5 py-12">
+    <div className="page-shell-narrow page-top pb-12">
       <Breadcrumbs
         crumbs={[
           { label: "Causes", to: "/" },
@@ -349,5 +349,5 @@ function Row({ label, children }: { label: string; children: React.ReactNode }) 
 }
 
 function Empty({ children }: { children: React.ReactNode }) {
-  return <div className="mx-auto max-w-3xl px-5 py-24 text-center text-muted-foreground">{children}</div>;
+  return <div className="page-shell-narrow page-top pb-24 text-center text-muted-foreground">{children}</div>;
 }

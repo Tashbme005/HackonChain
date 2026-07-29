@@ -16,6 +16,7 @@ import { Route as DonorRouteImport } from "./routes/donor"
 import { Route as HowItWorksRouteImport } from "./routes/how-it-works"
 import { Route as LinkOrgRouteImport } from "./routes/link-org"
 import { Route as OrganisationRouteImport } from "./routes/organisation"
+import { Route as OrganisationsRouteImport } from "./routes/organisations"
 import { Route as RecipientRouteImport } from "./routes/recipient"
 import { Route as TrustRouteImport } from "./routes/trust"
 import { Route as CauseOrgIdRouteImport } from "./routes/cause.$orgId"
@@ -57,6 +58,11 @@ const OrganisationRoute = OrganisationRouteImport.update({
   path: "/organisation",
   getParentRoute: () => rootRouteImport,
 } as any)
+const OrganisationsRoute = OrganisationsRouteImport.update({
+  id: "/organisations",
+  path: "/organisations",
+  getParentRoute: () => rootRouteImport,
+} as any)
 const RecipientRoute = RecipientRouteImport.update({
   id: "/recipient",
   path: "/recipient",
@@ -91,6 +97,7 @@ export interface FileRoutesByFullPath {
   "/how-it-works": typeof HowItWorksRoute
   "/link-org": typeof LinkOrgRoute
   "/organisation": typeof OrganisationRoute
+  "/organisations": typeof OrganisationsRoute
   "/recipient": typeof RecipientRoute
   "/trust": typeof TrustRoute
   "/cause/$orgId": typeof CauseOrgIdRoute
@@ -105,6 +112,7 @@ export interface FileRoutesByTo {
   "/how-it-works": typeof HowItWorksRoute
   "/link-org": typeof LinkOrgRoute
   "/organisation": typeof OrganisationRoute
+  "/organisations": typeof OrganisationsRoute
   "/recipient": typeof RecipientRoute
   "/trust": typeof TrustRoute
   "/cause/$orgId": typeof CauseOrgIdRoute
@@ -120,6 +128,7 @@ export interface FileRoutesById {
   "/how-it-works": typeof HowItWorksRoute
   "/link-org": typeof LinkOrgRoute
   "/organisation": typeof OrganisationRoute
+  "/organisations": typeof OrganisationsRoute
   "/recipient": typeof RecipientRoute
   "/trust": typeof TrustRoute
   "/cause/$orgId": typeof CauseOrgIdRoute
@@ -136,6 +145,7 @@ export interface FileRouteTypes {
     | "/how-it-works"
     | "/link-org"
     | "/organisation"
+    | "/organisations"
     | "/recipient"
     | "/trust"
     | "/cause/$orgId"
@@ -150,6 +160,7 @@ export interface FileRouteTypes {
     | "/how-it-works"
     | "/link-org"
     | "/organisation"
+    | "/organisations"
     | "/recipient"
     | "/trust"
     | "/cause/$orgId"
@@ -164,6 +175,7 @@ export interface FileRouteTypes {
     | "/how-it-works"
     | "/link-org"
     | "/organisation"
+    | "/organisations"
     | "/recipient"
     | "/trust"
     | "/cause/$orgId"
@@ -179,6 +191,7 @@ export interface RootRouteChildren {
   HowItWorksRoute: typeof HowItWorksRoute
   LinkOrgRoute: typeof LinkOrgRoute
   OrganisationRoute: typeof OrganisationRoute
+  OrganisationsRoute: typeof OrganisationsRoute
   RecipientRoute: typeof RecipientRoute
   TrustRoute: typeof TrustRoute
   CauseOrgIdRoute: typeof CauseOrgIdRoute
@@ -237,6 +250,13 @@ declare module "@tanstack/react-router" {
       preLoaderRoute: typeof OrganisationRouteImport
       parentRoute: typeof rootRouteImport
     }
+    "/organisations": {
+      id: "/organisations"
+      path: "/organisations"
+      fullPath: "/organisations"
+      preLoaderRoute: typeof OrganisationsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     "/recipient": {
       id: "/recipient"
       path: "/recipient"
@@ -283,6 +303,7 @@ const rootRouteChildren: RootRouteChildren = {
   HowItWorksRoute: HowItWorksRoute,
   LinkOrgRoute: LinkOrgRoute,
   OrganisationRoute: OrganisationRoute,
+  OrganisationsRoute: OrganisationsRoute,
   RecipientRoute: RecipientRoute,
   TrustRoute: TrustRoute,
   CauseOrgIdRoute: CauseOrgIdRoute,
