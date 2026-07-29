@@ -62,13 +62,19 @@ export function proofOrgBrief(
   proof: Pick<ProofOfUse, "description" | "testimonial">,
   maxChars = 90,
 ) {
-  const source = (proof.description || proof.testimonial || "").replace(/\s+/g, " ").trim();
+  const source = (proof.description || proof.testimonial || "")
+    .replace(/\s+/g, " ")
+    .trim();
   if (!source) return "Submission received";
-  return source.length <= maxChars ? source : `${source.slice(0, maxChars).trimEnd()}…`;
+  return source.length <= maxChars
+    ? source
+    : `${source.slice(0, maxChars).trimEnd()}…`;
 }
 
 /** Name to show for the donor a proof is addressed to. */
-export function proofDonorLabel(proof: Pick<ProofOfUse, "donorName" | "donorIsPublic">) {
+export function proofDonorLabel(
+  proof: Pick<ProofOfUse, "donorName" | "donorIsPublic">,
+) {
   return proof.donorIsPublic && proof.donorName ? proof.donorName : "Anonymous";
 }
 
@@ -124,7 +130,9 @@ export interface Donation {
   publication?: PublicationProof | null;
 }
 
-export function publicationStatus(d: Pick<Donation, "publication">): PublicationStatus {
+export function publicationStatus(
+  d: Pick<Donation, "publication">,
+): PublicationStatus {
   return d.publication ? "published" : "pending";
 }
 
@@ -203,7 +211,7 @@ export interface RecipientInvite {
 
 export const STATUS_LABEL: Record<DonationStatus, string> = {
   pending: "Waiting to be received",
-  received: "Received — proof pending",
+  received: "Received. Proof pending",
   verified: "Verified",
   flagged: "Flagged for review",
 };
@@ -218,6 +226,6 @@ export function recipientPublicLabel(
 
 /** Short wallet form used next to a pseudonym. */
 export function shortWallet(address?: string) {
-  if (!address) return "—";
+  if (!address) return ". ";
   return `${address.slice(0, 6)}…${address.slice(-4)}`;
 }
