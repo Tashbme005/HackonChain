@@ -6,7 +6,13 @@ import { toast } from "sonner";
 import { StampBadge, StatusPill } from "@/components/openimpact/StampBadge";
 import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
 import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/openimpact/store";
-import { runAiProofCheck, shortAddress, submitToChain } from "@/lib/openimpact/web3";
+import {
+  confirmReceiptOnChain,
+  runAiProofCheck,
+  shortAddress,
+  submitProofHashOnChain,
+  submitToChain,
+} from "@/lib/openimpact/web3";
 
 export const Route = createFileRoute("/recipient")({
   head: () => ({
@@ -79,7 +85,7 @@ function RecipientProfile() {
   async function onConfirmAll() {
     for (const d of awaiting) {
       // eslint-disable-next-line no-await-in-loop
-      await submitToChain({ action: "confirmReceipt", donationId: d.id });
+      await confirmReceiptOnChain(d.id, d.onChainDonationId);
       // eslint-disable-next-line no-await-in-loop
       await confirmReceipt(d.id);
     }
@@ -132,7 +138,11 @@ function RecipientProfile() {
           await attachGeneralProof(currentRecipientId, me.orgId, reviewed, photoFile);
         }
       } else {
-        await submitToChain({ action: "attachProof", donationId: targetId });
+        await submitProofHashOnChain(targetId, {
+          photoUrl: image,
+          description: draft.description,
+          testimonial: draft.testimonial,
+        });
         await attachProofToDonation(targetId, reviewed, photoFile);
       }
 
@@ -316,7 +326,7 @@ function RecipientProfile() {
                   <button
                     type="button"
                     onClick={async () => {
-                      await submitToChain({ action: "confirmReceipt", donationId: d.id });
+                      await confirmReceiptOnChain(d.id, d.onChainDonationId);
                       await confirmReceipt(d.id);
                       toast.success("Marked as received.");
                     }}

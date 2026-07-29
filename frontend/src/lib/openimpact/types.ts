@@ -110,6 +110,12 @@ export interface Donation {
   orgId?: string;
   status: DonationStatus;
   txHash: string;
+  /**
+   * OpenImpact contract `uint256` id when the donation was escrowed on-chain.
+   * Mapped in sessionStorage for confirm/proof/publication calls; also kept
+   * here for UI. Optional Supabase column can be added later.
+   */
+  onChainDonationId?: string;
   timestamp: string;
   note?: string;
   /** Proof of use attached to *this* donation, visible to *this* donor. */

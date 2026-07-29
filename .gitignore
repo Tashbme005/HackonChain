@@ -7,6 +7,11 @@ dist/
 .env.*
 !.env.example
 
+# Foundry
+smart_contract/out/
+smart_contract/cache/
+smart_contract/broadcast/
+
 # Cursor IDE junk — keep versioned project rules
 .cursor/*
 !.cursor/rules/

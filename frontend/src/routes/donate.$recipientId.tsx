@@ -5,7 +5,14 @@ import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
 import { StampBadge } from "@/components/openimpact/StampBadge";
 import { ReceiptShell } from "@/components/openimpact/ReceiptCard";
 import { formatAmount, formatStamp, useLedger } from "@/lib/openimpact/store";
-import { connectWallet, mockTxHash, shortAddress, submitToChain } from "@/lib/openimpact/web3";
+import {
+  connectWallet,
+  createDonationOnChain,
+  isContractConfigured,
+  mockTxHash,
+  rememberOnChainDonationId,
+  shortAddress,
+} from "@/lib/openimpact/web3";
 import { recipientPublicLabel } from "@/lib/openimpact/types";
 import type { Donation } from "@/lib/openimpact/types";
 
@@ -45,6 +52,7 @@ function DonateFlow() {
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [created, setCreated] = useState<Donation | null>(null);
+  const assetLabel = isContractConfigured() ? "ETH" : "USDC";
 
   if (!recipient) {
     return (
@@ -64,25 +72,33 @@ function DonateFlow() {
   async function onSend() {
     setBusy(true);
     try {
-      const txHash = await submitToChain({
-        to: recipient!.walletAddress,
-        amount,
-        currency: "USDC",
-        isPublic,
+      if (!org?.walletAddress) {
+        throw new Error("Organisation wallet is missing.");
+      }
+      const onChain = isContractConfigured();
+      const currency = onChain ? "ETH" : "USDC";
+      const chain = await createDonationOnChain({
+        organisation: org.walletAddress,
+        recipient: recipient!.walletAddress,
+        amountEth: amount,
       });
       const donation: Donation = {
         id: `dn-${crypto.randomUUID().slice(0, 8)}`,
         donorName: isPublic ? currentDonorName : "Anonymous",
         isPublic,
         amount,
-        currency: "USDC",
+        currency,
         recipientId: recipient!.id,
         orgId: recipient!.orgId,
         status: "pending",
-        txHash: txHash || mockTxHash(),
+        txHash: chain.txHash || mockTxHash(),
+        onChainDonationId: chain.onChainDonationId,
         timestamp: new Date().toISOString(),
         note: note.trim() || undefined,
       };
+      if (chain.onChainDonationId) {
+        rememberOnChainDonationId(donation.id, chain.onChainDonationId);
+      }
       const saved = await addDonation(donation);
       setCreated(saved);
       setStep("done");
@@ -155,7 +171,7 @@ function DonateFlow() {
                       : "border-input hover:bg-accent"
                   }`}
                 >
-                  {p} USDC
+                  {p} {assetLabel}
                 </button>
               ))}
             </div>
@@ -213,7 +229,7 @@ function DonateFlow() {
               <Row label="To">{recipientPublicLabel(recipient)}</Row>
               <Row label="Organisation">{org?.name ?? "Direct"}</Row>
               <Row label="Amount">
-                <span className="data-mono font-medium">{formatAmount(amount, "USDC")}</span>
+                <span className="data-mono font-medium">{formatAmount(amount, assetLabel)}</span>
               </Row>
               <Row label="From">{isPublic ? currentDonorName : "Anonymous"}</Row>
               <Row label="Their wallet">
@@ -234,7 +250,7 @@ function DonateFlow() {
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
                 >
                   {busy && <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
-                  {busy ? "Submitting to the ledger…" : `Send ${formatAmount(amount, "USDC")}`}
+                  {busy ? "Submitting to the ledger…" : `Send ${formatAmount(amount, assetLabel)}`}
                 </button>
                 <button
                   type="button"
