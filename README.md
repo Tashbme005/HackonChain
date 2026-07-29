@@ -10,7 +10,7 @@
 </p>
 
 <p align="center">
-  <a href="https://open-impact.vercel.app/"><img src="https://img.shields.io/badge/Live%20demo-open-impact.vercel.app-1E8F6F?style=for-the-badge" alt="Live demo" /></a>
+  <a href="https://open-impact.vercel.app/"><img src="https://img.shields.io/badge/Live%20demo-open--impact.vercel.app-1E8F6F?style=for-the-badge" alt="Live demo" /></a>
   <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-1A1F1C?style=for-the-badge" alt="MIT" /></a>
   <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?style=for-the-badge" alt="CI" /></a>
 </p>
