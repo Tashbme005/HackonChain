@@ -1,11 +1,15 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
-import { Copy } from "lucide-react";
+import { Copy, Lock } from "lucide-react";
 import { toast } from "sonner";
 
 import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
 import { StampBadge, StatusPill } from "@/components/openimpact/StampBadge";
 import { formatAmount, formatStamp, useLedger } from "@/lib/openimpact/store";
-import { STATUS_LABEL, recipientPublicLabel } from "@/lib/openimpact/types";
+import {
+  STATUS_LABEL,
+  hasDonorOnlyShare,
+  recipientPublicLabel,
+} from "@/lib/openimpact/types";
 
 export const Route = createFileRoute("/proof/$donationId")({
   head: () => ({
@@ -28,17 +32,29 @@ export const Route = createFileRoute("/proof/$donationId")({
 
 function ProofPage() {
   const { donationId } = Route.useParams();
-  const { donations, getRecipient, getOrg } = useLedger();
+  const { donations, getRecipient, getOrg, account, currentDonorName } = useLedger();
   const donation = donations.find((d) => d.id === donationId);
   const recipient = donation ? getRecipient(donation.recipientId) : undefined;
   const org = getOrg(donation?.orgId);
   const proof = donation?.proof ?? null;
   const donorLabel = donation ? (donation.isPublic ? donation.donorName : "Anonymous") : "";
 
+  // Contact/social share is gated to the signed-in donor who funded this receipt.
+  const isFundingDonor =
+    !!donation &&
+    account?.role === "donor" &&
+    (account.name === donation.donorName || currentDonorName === donation.donorName);
+  const share = proof?.donorOnlyShare;
+  const showDonorShare = isFundingDonor && hasDonorOnlyShare(proof);
+
   if (!donation || !recipient) {
     return (
       <div className="mx-auto max-w-2xl px-5 py-24 text-center text-muted-foreground">
-        That receipt doesn't exist. <Link to="/donor" className="underline">Back to your donations</Link>.
+        That receipt doesn't exist.{" "}
+        <Link to="/donor" className="underline">
+          Back to your donations
+        </Link>
+        .
       </div>
     );
   }
@@ -116,8 +132,57 @@ function ProofPage() {
                   </footer>
                 </blockquote>
               )}
-              {/* Donor-facing result of the automated authenticity check —
-                  a badge, plus one plain sentence if it was flagged. */}
+
+              {showDonorShare && share && (
+                <div className="mt-6 border border-verified/40 bg-verified-soft/40 p-5">
+                  <div className="flex items-center gap-2">
+                    <Lock className="size-4 text-verified" aria-hidden />
+                    <p className="text-[11px] uppercase tracking-[0.2em] text-verified">
+                      Shared with you only
+                    </p>
+                  </div>
+                  <p className="mt-2 text-xs text-muted-foreground">
+                    {recipientPublicLabel(recipient)} chose to share these details with you as the
+                    donor. They are not shown to {org?.name ?? "the organisation"} or on the public
+                    receipt.
+                  </p>
+                  <dl className="mt-4 space-y-2 text-sm">
+                    {share.contact && (
+                      <div>
+                        <dt className="text-xs uppercase tracking-widest text-muted-foreground">
+                          Contact
+                        </dt>
+                        <dd className="mt-0.5">{share.contact}</dd>
+                      </div>
+                    )}
+                    {share.social && (
+                      <div>
+                        <dt className="text-xs uppercase tracking-widest text-muted-foreground">
+                          Social
+                        </dt>
+                        <dd className="mt-0.5 break-all">{share.social}</dd>
+                      </div>
+                    )}
+                    {share.note && (
+                      <div>
+                        <dt className="text-xs uppercase tracking-widest text-muted-foreground">
+                          Note
+                        </dt>
+                        <dd className="mt-0.5">{share.note}</dd>
+                      </div>
+                    )}
+                  </dl>
+                </div>
+              )}
+
+              {!isFundingDonor && hasDonorOnlyShare(proof) && (
+                <p className="mt-5 flex items-start gap-2 text-xs text-muted-foreground">
+                  <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+                  The recipient also shared private contact details with the donor who funded this
+                  receipt. Those stay off the public page.
+                </p>
+              )}
+
               <div className="mt-5 flex flex-wrap items-center gap-3 border border-border bg-background px-4 py-3">
                 <StampBadge status={proof.flagged ? "flagged" : "verified"} size="sm" />
                 <p className="min-w-0 flex-1 text-sm">
@@ -138,7 +203,6 @@ function ProofPage() {
               <p className="data-mono mt-4 text-xs text-muted-foreground">
                 Proof uploaded {formatStamp(proof.submittedAt)}
               </p>
-
             </>
           ) : (
             <p className="mt-3 text-base text-muted-foreground">
@@ -148,7 +212,6 @@ function ProofPage() {
           )}
         </div>
 
-        {/* Auto-generated impact summary — sharable as a social card or link */}
         {proof && !proof.flagged && (
           <div className="dotted-rule mt-7 border border-verified/30 bg-verified-soft/40 p-5 pt-5">
             <p className="text-[11px] uppercase tracking-[0.2em] text-verified">

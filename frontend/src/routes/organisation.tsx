@@ -3,6 +3,7 @@ import { ArrowDownLeft, ArrowUpRight, BadgeCheck, Copy, Link2, Trash2 } from "lu
 import { useState } from "react";
 import { toast } from "sonner";
 
+import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
 import { PublicationPanel } from "@/components/openimpact/PublicationPanel";
 import { StampBadge } from "@/components/openimpact/StampBadge";
 import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/openimpact/store";
@@ -16,7 +17,6 @@ import {
   recipientPublicLabel,
   shortWallet,
 } from "@/lib/openimpact/types";
-
 
 export const Route = createFileRoute("/organisation")({
   head: () => ({
@@ -56,6 +56,13 @@ function OrganisationConsole() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10">
+      <Breadcrumbs
+        crumbs={[
+          { label: "Home", to: "/" },
+          { label: "Organisation console" },
+        ]}
+        className="mb-4"
+      />
       <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
         Organisation view · internal console
       </p>

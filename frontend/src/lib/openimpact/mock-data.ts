@@ -21,6 +21,11 @@ const PROOF_AMINA_PUMP: ProofOfUse = {
   testimonial:
     "The queue at the well is twenty minutes now, not two hours. Thank you for trusting us with this.",
   submittedAt: "2026-07-19T14:20:00.000Z",
+  donorOnlyShare: {
+    contact: "WhatsApp +254 700 000 000 (Amina — evenings only)",
+    social: "instagram.com/mtwapa.water",
+    note: "Happy to send a short video of the borehole if you'd like — just message.",
+  },
 };
 
 const PROOF_AMINA_SECOND: ProofOfUse = {

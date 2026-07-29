@@ -4,6 +4,7 @@ import { useRef, useState } from "react";
 import { toast } from "sonner";
 
 import { StampBadge, StatusPill } from "@/components/openimpact/StampBadge";
+import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
 import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/openimpact/store";
 import { runAiProofCheck, shortAddress, submitToChain } from "@/lib/openimpact/web3";
 
@@ -49,6 +50,9 @@ function RecipientProfile() {
   const [description, setDescription] = useState("");
   const [testimonial, setTestimonial] = useState("");
   const [photoUrl, setPhotoUrl] = useState<string | null>(null);
+  const [shareContact, setShareContact] = useState("");
+  const [shareSocial, setShareSocial] = useState("");
+  const [shareNote, setShareNote] = useState("");
   const [busy, setBusy] = useState(false);
   const [uploadError, setUploadError] = useState<string | null>(null);
   /** Which donation this upload answers for. "general" = org page content. */
@@ -87,11 +91,21 @@ function RecipientProfile() {
     setBusy(true);
     try {
       const image = photoUrl ?? SAMPLE_PHOTO;
+      const donorOnlyShare =
+        targetId !== "general" &&
+        (shareContact.trim() || shareSocial.trim() || shareNote.trim())
+          ? {
+              contact: shareContact.trim() || undefined,
+              social: shareSocial.trim() || undefined,
+              note: shareNote.trim() || undefined,
+            }
+          : undefined;
       const draft = {
         photoUrl: image,
         description: description.trim(),
         testimonial: testimonial.trim(),
         submittedAt: new Date().toISOString(),
+        ...(donorOnlyShare ? { donorOnlyShare } : {}),
       };
 
       // Lightweight reuse check: same image bytes as an earlier upload of mine.
@@ -124,6 +138,9 @@ function RecipientProfile() {
       setDescription("");
       setTestimonial("");
       setPhotoUrl(null);
+      setShareContact("");
+      setShareSocial("");
+      setShareNote("");
       if (check.flagged) {
         toast.error(
           check.reason ?? "Uploaded, but our automated check flagged this photo for review.",
@@ -146,6 +163,13 @@ function RecipientProfile() {
 
   return (
     <div className="mx-auto max-w-3xl px-5 py-10">
+      <Breadcrumbs
+        crumbs={[
+          { label: "Home", to: "/" },
+          { label: "Recipient dashboard" },
+        ]}
+        className="mb-4"
+      />
       <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
         Recipient view
       </p>
@@ -465,11 +489,60 @@ function RecipientProfile() {
               className="mt-1.5 w-full border border-input bg-background px-3 py-2.5 text-base"
             />
             <span className="mt-1.5 block text-xs text-muted-foreground">
-              This is signed <span className="data-mono">{me.pseudonym}</span> by default. If you
-              want to sign with your real name or add personal details, write them into the note —
-              that's your choice, and only what you type here becomes public.
+              This is signed <span className="data-mono">{me.pseudonym}</span> by default and appears
+              on the public receipt. Contact details belong in the private share section below —
+              those go only to {donorLabel ?? "the donor"}, never to{" "}
+              {org?.name ?? "your organisation"} or the public.
             </span>
           </label>
+
+          {targetId !== "general" && (
+            <fieldset className="border border-dashed border-verified/40 bg-verified-soft/30 p-4">
+              <legend className="px-1 text-sm font-medium text-verified">
+                Share with {donorLabel} only (optional)
+              </legend>
+              <p className="mt-1 text-xs text-muted-foreground">
+                Phone, email, WhatsApp or a social handle — only the person who funded this
+                donation can see these. Your organisation never will.
+              </p>
+              <label className="mt-4 block">
+                <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Contact
+                </span>
+                <input
+                  type="text"
+                  value={shareContact}
+                  onChange={(e) => setShareContact(e.target.value)}
+                  placeholder="WhatsApp +254 … or you@example.com"
+                  className="mt-1.5 w-full border border-input bg-background px-3 py-2.5 text-base"
+                />
+              </label>
+              <label className="mt-3 block">
+                <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Social
+                </span>
+                <input
+                  type="text"
+                  value={shareSocial}
+                  onChange={(e) => setShareSocial(e.target.value)}
+                  placeholder="@handle or a profile link"
+                  className="mt-1.5 w-full border border-input bg-background px-3 py-2.5 text-base"
+                />
+              </label>
+              <label className="mt-3 block">
+                <span className="text-xs uppercase tracking-widest text-muted-foreground">
+                  Private note
+                </span>
+                <input
+                  type="text"
+                  value={shareNote}
+                  onChange={(e) => setShareNote(e.target.value)}
+                  placeholder="Happy to send a short video if you'd like."
+                  className="mt-1.5 w-full border border-input bg-background px-3 py-2.5 text-base"
+                />
+              </label>
+            </fieldset>
+          )}
 
 
           <p className="text-xs text-muted-foreground">
