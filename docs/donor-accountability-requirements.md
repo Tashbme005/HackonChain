@@ -1,5 +1,5 @@
 # Project Requirements & User Stories
-## Working title: "TrustFlow" (Transparent Donation Accountability Platform)
+## Working title: "openImpact" (Transparent Donation Accountability Platform)
 
 **Track fit:** Primary — DeFi & SocialFi (transparent money flows, reputation & trust). Secondary — Privacy & Security (donor privacy), Consumer AI & ML (counterfeit/receipt verification).
 
@@ -28,7 +28,7 @@ This is not a hypothetical problem. Documented cases across NGO, government, and
 - **Individual-level fraud:** Documented orphanage and child-sponsorship scams exploit donor goodwill directly, and fraudulent posts impersonating organisations like UNICEF have circulated in Uganda promising mobile-money payouts to solicit personal information and money.
 - **Macro indicator:** Uganda scored 25/100 on the 2025 Corruption Perceptions Index, ranking 148th of 182 countries; a recent Afrobarometer survey found seven in ten Ugandans view government anti-corruption efforts as poor.
 
-**Pitch takeaway:** existing accountability relies on after-the-fact audits and inquiries — often years after funds are diverted. TrustFlow makes accountability visible at the moment of the transaction, not after a scandal breaks.
+**Pitch takeaway:** existing accountability relies on after-the-fact audits and inquiries — often years after funds are diverted. openImpact makes accountability visible at the moment of the transaction, not after a scandal breaks.
 
 *Sources: The New Humanitarian, ReliefWeb, Daily Monitor, The Global Fund, allAfrica, Transparency International / TradingEconomics, Africa Check, Love Without Boundaries.*
 
@@ -147,3 +147,4 @@ These rules govern who can see what, and are strict enough to affect data modeli
 - Is the AI counterfeit check running off-chain and just writing a "verified" flag on-chain, or is it fully on-chain (unlikely, but confirm)?
 - Do organisations need multi-sig / approval flows for disbursement, or is it a direct donor→recipient flow with org as pass-through?
 
+### Answers

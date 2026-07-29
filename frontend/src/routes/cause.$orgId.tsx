@@ -1,25 +1,26 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { StampBadge, StatusPill } from "@/components/trustflow/StampBadge";
-import { formatAmount, formatStamp, useLedger } from "@/lib/trustflow/store";
+import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
+import { StampBadge, StatusPill } from "@/components/openimpact/StampBadge";
+import { formatAmount, formatStamp, useLedger } from "@/lib/openimpact/store";
 import {
   PUBLICATION_TYPE_LABEL,
   isFullyAccounted,
   linkHost,
   recipientPublicLabel,
-} from "@/lib/trustflow/types";
-import { shortAddress } from "@/lib/trustflow/web3";
+} from "@/lib/openimpact/types";
+import { shortAddress } from "@/lib/openimpact/web3";
 
 export const Route = createFileRoute("/cause/$orgId")({
   head: () => ({
     meta: [
-      { title: "Cause page — TrustFlow" },
+      { title: "Cause page — openImpact" },
       {
         name: "description",
         content:
           "An organisation's public page: what they do, their proof-of-use score, the people they fund, and every recent receipt with proof attached.",
       },
-      { property: "og:title", content: "Cause page — TrustFlow" },
+      { property: "og:title", content: "Cause page — openImpact" },
       {
         property: "og:description",
         content: "Trust score, funded recipients and recent proof-of-use receipts.",
@@ -58,9 +59,13 @@ function CausePage() {
       <section className="border-b border-border">
         <div className="mx-auto grid max-w-6xl gap-8 px-5 py-12 lg:grid-cols-[1.2fr_0.8fr] lg:items-center">
           <div>
-            <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              Public cause page
-            </p>
+            <Breadcrumbs
+              crumbs={[
+                { label: "Causes", to: "/" },
+                { label: org.name },
+              ]}
+              className="mb-4"
+            />
             <h1 className="mt-3 text-4xl leading-tight sm:text-5xl">{org.name}</h1>
             <p className="mt-2 text-lg text-muted-foreground">{org.tagline}</p>
             <p className="mt-5 max-w-xl text-base leading-relaxed">{org.description}</p>
@@ -69,7 +74,7 @@ function CausePage() {
             </p>
 
             <dl className="mt-8 flex flex-wrap gap-x-10 gap-y-4 border-y border-border py-5">
-              <Stat label="Raised on TrustFlow" value={formatAmount(raised, "USDC")} />
+              <Stat label="Raised on openImpact" value={formatAmount(raised, "USDC")} />
               <Stat label="Receipts" value={String(rows.length)} />
               <Stat label="Accountability score" value={`${score}%`} accent />
               <Stat
@@ -105,46 +110,52 @@ function CausePage() {
 
       <section className="mx-auto max-w-6xl px-5 py-14">
         <h2 className="text-3xl">People funded through {org.name}</h2>
-        <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
-          {org.recipientIds.map((id) => {
-            const r = getRecipient(id);
-            if (!r) return null;
-            return (
-              <div key={id} className="border border-border bg-card p-5">
-                <div className="flex items-start justify-between gap-4">
-                  <div>
-                    <h3 className="text-xl leading-tight">{recipientPublicLabel(r)}</h3>
-                    <p className="mt-1 text-sm text-muted-foreground">{r.story}</p>
+        {org.recipientIds.length === 0 ? (
+          <p className="mt-6 border border-dashed border-input p-8 text-center text-muted-foreground">
+            No recipients linked yet. Once this organisation links recipients, they'll appear here.
+          </p>
+        ) : (
+          <div className="mt-6 grid gap-4 sm:grid-cols-2 lg:grid-cols-3">
+            {org.recipientIds.map((id) => {
+              const r = getRecipient(id);
+              if (!r) return null;
+              return (
+                <div key={id} className="border border-border bg-card p-5">
+                  <div className="flex items-start justify-between gap-4">
+                    <div>
+                      <h3 className="text-xl leading-tight">{recipientPublicLabel(r)}</h3>
+                      <p className="mt-1 text-sm text-muted-foreground">{r.story}</p>
+                    </div>
+                    <StampBadge
+                      status={
+                        donations.some((d) => d.recipientId === r.id && d.proof)
+                          ? "verified"
+                          : "pending"
+                      }
+                      size="sm"
+                    />
                   </div>
-                  <StampBadge
-                    status={
-                      donations.some((d) => d.recipientId === r.id && d.proof)
-                        ? "verified"
-                        : "pending"
-                    }
-                    size="sm"
-                  />
+                  <p className="data-mono mt-4 text-xs text-muted-foreground">
+                    {shortAddress(r.walletAddress)} · reputation {r.reputationScore}%
+                  </p>
+                  <Link
+                    to="/donate/$recipientId"
+                    params={{ recipientId: r.id }}
+                    className="mt-4 inline-block text-sm font-medium underline-offset-4 hover:underline"
+                  >
+                    Donate to {recipientPublicLabel(r)}
+                  </Link>
                 </div>
-                <p className="data-mono mt-4 text-xs text-muted-foreground">
-                  {shortAddress(r.walletAddress)} · reputation {r.reputationScore}%
-                </p>
-                <Link
-                  to="/donate/$recipientId"
-                  params={{ recipientId: r.id }}
-                  className="mt-4 inline-block text-sm font-medium underline-offset-4 hover:underline"
-                >
-                  Donate to {recipientPublicLabel(r)}
-                </Link>
-              </div>
-            );
-          })}
-        </div>
+              );
+            })}
+          </div>
+        )}
       </section>
 
       <section className="mx-auto max-w-6xl px-5 pb-4">
         <h2 className="text-3xl">How {org.name} shared this work</h2>
         <p className="mt-2 max-w-xl text-muted-foreground">
-          Organisations on TrustFlow must publicise the impact of every donation somewhere public —
+          Organisations on openImpact must publicise the impact of every donation somewhere public —
           and link the proof here. {published.length} of {rows.length} donations have a publication
           on file.
         </p>

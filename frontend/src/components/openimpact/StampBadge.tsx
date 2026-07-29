@@ -1,7 +1,7 @@
 import { AlertTriangle, Check, Clock } from "lucide-react";
 
 import { cn } from "@/lib/utils";
-import type { DonationStatus } from "@/lib/trustflow/types";
+import type { DonationStatus } from "@/lib/openimpact/types";
 
 const SIZES = {
   sm: "size-10 text-[9px]",

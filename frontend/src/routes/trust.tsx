@@ -4,13 +4,13 @@ import { Eye, EyeOff } from "lucide-react";
 export const Route = createFileRoute("/trust")({
   head: () => ({
     meta: [
-      { title: "Trust & privacy — what's public on TrustFlow" },
+      { title: "Trust & privacy — what's public on openImpact" },
       {
         name: "description",
         content:
           "Plain-language answers: your name is optional, transactions are traceable by amount and wallet, and personal details never go on the ledger.",
       },
-      { property: "og:title", content: "Trust & privacy on TrustFlow" },
+      { property: "og:title", content: "Trust & privacy on openImpact" },
       {
         property: "og:description",
         content: "What's public, what's private, and what you control — in plain words.",
@@ -136,7 +136,7 @@ function TrustPage() {
       <p className="mt-8 text-sm text-muted-foreground">
         This prototype runs on invented data and stubbed wallet calls — nothing described here has
         been independently audited or certified. It's a description of how the product is designed
-        to behave, maintained by the TrustFlow team.
+ to behave, maintained by the openImpact team.
       </p>
     </div>
   );

@@ -1,4 +1,4 @@
-# HackonChain — TrustFlow
+# HackonChain — openImpact
 
 A transparent donation accountability platform that tracks every donation from donor → organisation → end recipient, with proof-of-use uploads and an AI trust layer to flag suspicious submissions.
 
@@ -44,7 +44,7 @@ Donors have little visibility into whether their donation reached the intended r
 
 ### The solution
 
-TrustFlow treats every donation as a receipt you can verify:
+openImpact treats every donation as a receipt you can verify:
 
 - Donations are traceable end-to-end (donor → org/intermediary → recipient).
 - Recipients publish **proof of use** (photos, receipts, testimonials).

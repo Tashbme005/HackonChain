@@ -2,13 +2,13 @@ import { useState } from "react";
 import { Link } from "@tanstack/react-router";
 import { ArrowRight, Loader2, Play, RotateCcw, Wand2 } from "lucide-react";
 
-import { StampBadge } from "@/components/trustflow/StampBadge";
-import { formatAmount, useLedger } from "@/lib/trustflow/store";
-import { recipientPublicLabel, shortWallet } from "@/lib/trustflow/types";
-import { mockTxHash, submitToChain } from "@/lib/trustflow/web3";
+import { StampBadge } from "@/components/openimpact/StampBadge";
+import { formatAmount, useLedger } from "@/lib/openimpact/store";
+import { recipientPublicLabel, shortWallet } from "@/lib/openimpact/types";
+import { mockTxHash, submitToChain } from "@/lib/openimpact/web3";
 
 /**
- * Guided, no-account preview of the whole TrustFlow loop for hackathon judges.
+ * Guided, no-account preview of the whole openImpact loop for hackathon judges.
  * Everything here is scripted mock data — it deliberately looks like a preview
  * panel, not the real product surface.
  */
@@ -179,11 +179,10 @@ export function DemoSimulator() {
                       type="button"
                       onClick={() => setOrgId(o.id)}
                       aria-pressed={selected}
-                      className={`flex items-center gap-3 border p-3 text-left transition-colors ${
-                        selected
+                      className={`flex items-center gap-3 border p-3 text-left transition-colors ${selected
                           ? "border-pending bg-pending/10"
                           : "border-border hover:bg-accent"
-                      }`}
+                        }`}
                     >
                       <img
                         src={o.imageUrl}

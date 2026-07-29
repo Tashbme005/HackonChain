@@ -8,8 +8,8 @@ import {
 import { useEffect } from "react";
 import { Toaster } from "sonner";
 
-import { LedgerProvider } from "@/lib/trustflow/store";
-import { SiteFooter, SiteHeader } from "@/components/trustflow/SiteChrome";
+import { LedgerProvider } from "@/lib/openimpact/store";
+import { SiteFooter, SiteHeader } from "@/components/openimpact/SiteChrome";
 
 function NotFoundComponent() {
   return (

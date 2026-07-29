@@ -1,8 +1,8 @@
-# Lovable Build Prompt — TrustFlow (Donor Accountability Platform)
+# Lovable Build Prompt — openImpact (Donor Accountability Platform)
 
 ## Product brief
 
-Build **TrustFlow**, a web app where people can donate to causes/organisations and track, on a wallet-based ledger, exactly what happened to their money — including proof-of-use uploaded by the recipient (photos, receipts, testimonials). The core value is **transparency you can see, not just promise**. This is a hackathon MVP for a blockchain/AI hackathon — prioritize a clean, convincing demo flow over completeness.
+Build **openImpact**, a web app where people can donate to causes/organisations and track, on a wallet-based ledger, exactly what happened to their money — including proof-of-use uploaded by the recipient (photos, receipts, testimonials). The core value is **transparency you can see, not just promise**. This is a hackathon MVP for a blockchain/AI hackathon — prioritize a clean, convincing demo flow over completeness.
 
 Build this as a frontend-only prototype for now: use mock/local data (no real wallet connection or blockchain calls yet — stub these with clearly-named placeholder functions like `connectWallet()`, `submitToChain()` so the web3 team can wire in real logic later).
 

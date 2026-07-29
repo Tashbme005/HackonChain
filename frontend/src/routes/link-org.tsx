@@ -3,19 +3,19 @@ import { useMemo, useState } from "react";
 import { Search } from "lucide-react";
 import { toast } from "sonner";
 
-import { formatAmount, useLedger, useRequireRole } from "@/lib/trustflow/store";
-import { shortAddress } from "@/lib/trustflow/web3";
+import { formatAmount, useLedger, useRequireRole } from "@/lib/openimpact/store";
+import { shortAddress } from "@/lib/openimpact/web3";
 
 export const Route = createFileRoute("/link-org")({
   head: () => ({
     meta: [
-      { title: "Find your organisation — TrustFlow recipients" },
+      { title: "Find your organisation — openImpact recipients" },
       {
         name: "description",
         content:
-          "Signed up as a recipient without an invite link? Search the organisations on TrustFlow and link your account to the one you work with.",
+          "Signed up as a recipient without an invite link? Search the organisations on openImpact and link your account to the one you work with.",
       },
-      { property: "og:title", content: "Find your organisation — TrustFlow" },
+      { property: "og:title", content: "Find your organisation — openImpact" },
       {
         property: "og:description",
         content: "Search organisations and link your recipient account — no invite needed.",
