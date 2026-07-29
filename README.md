@@ -1,114 +1,101 @@
-# HackonChain — OpenImpact
+<p align="center">
+  <img src="assets/openimpact-banner.svg" alt="OpenImpact" width="100%" />
+</p>
 
-A transparent donation accountability platform that tracks every donation from donor → organisation → end recipient, with proof-of-use uploads and an AI trust layer to flag suspicious submissions.
+<h1 align="center">By Team HackonChain</h1>
 
-## Repo structure
+<p align="center">
+  Track every donation from donor to organisation to recipient,<br/>
+  with proof of use, privacy built in, and a trust score that cannot be faked in the UI.
+</p>
 
-```
-frontend/          React + Vite SPA (TanStack Router, Tailwind CSS, shadcn/ui)
-backend/           Supabase (Postgres schema, RLS, Edge Functions) — see backend/README.md
-docs/              Product requirements, build prompts, and diagrams
-LICENSE            MIT
-CONTRIBUTING.md    How to contribute
-```
+<p align="center">
+  <a href="https://hackon-chain.vercel.app/"><img src="https://img.shields.io/badge/Live%20demo-hackon--chain.vercel.app-1E8F6F?style=for-the-badge" alt="Live demo" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-1A1F1C?style=for-the-badge" alt="MIT" /></a>
+  <a href=".github/workflows/ci.yml"><img src="https://img.shields.io/badge/CI-GitHub%20Actions-2088FF?style=for-the-badge" alt="CI" /></a>
+</p>
 
-## Getting started
+---
 
-```bash
-cd frontend
-npm install
-npm run dev        # starts Vite dev server at http://localhost:5173
-```
+## What it is
 
-Other scripts:
+**OpenImpact** turns charity into a receipt you can follow.
 
-```bash
-npm run build      # production build → frontend/dist/
-npm run preview    # preview the production build locally
-npm run lint       # ESLint
-npm run format     # Prettier
-```
+1. A donor sends funds (wallet stub for now)
+2. The recipient confirms they arrived
+3. Proof of use lands on that donation (photo, note, thank you)
+4. The organisation files a public publication link
+5. Only then is the gift **fully accounted for**
 
-## Live demo
+Recipient real names stay private. Organisations only see a short brief. The funding donor sees the full story.
 
-**[hackon-chain.vercel.app](https://hackon-chain.vercel.app/)**
+## What’s live now
 
-## Deployment
-
-The frontend is deployed on **Vercel** with the root directory set to `frontend`. The included `vercel.json` handles the build command, output directory, and SPA rewrites.
-
-### CI / CD (GitHub Actions)
-
-- **CI** (`.github/workflows/ci.yml`) — on PRs to `main` and pushes that touch `frontend/`, installs deps and runs `npm run build` (TypeScript + Vite).
-- **CD** — production deploys via the **Vercel Git integration** (recommended). Optional Actions deploy is in `.github/workflows/deploy.yml` if you set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` secrets.
-
-Optional repo configuration for builds that should bake in Supabase:
-
-| Name | Type | Where |
-|---|---|---|
-| `VITE_SUPABASE_URL` | Variable | Settings → Secrets and variables → Actions → Variables |
-| `VITE_SUPABASE_ANON_KEY` | Secret | Settings → Secrets and variables → Actions → Secrets |
-
-Also set the same keys in the Vercel project Environment Variables for production.
-
-## Project summary
-
-### The problem
-
-Donors have little visibility into whether their donation reached the intended recipient or how it was actually used. Accountability often surfaces years later through audits or court cases — never at the point of transaction.
-
-### The solution
-
-OpenImpact treats every donation as a receipt you can verify:
-
-- Donations are traceable end-to-end (donor → org/intermediary → recipient).
-- Recipients publish **proof of use** (photos, receipts, testimonials).
-- An AI trust layer flags likely duplicates or fakes for review.
-- Donors can stay private: PII is kept off-chain while only wallet/transaction data lives on-chain.
-
-### Privacy & accountability principles
-
-- Recipient identity is private from the organisation (only wallet/pseudonym visible).
-- The organisation sees submission status and a brief summary, not full proof or testimonials.
-- The donor sees the full proof and testimonial for their specific donation.
-- Organisations must publish impact proof too — a donation isn't fully accounted for until both sides submit.
-- Reputation scores reflect both recipient proof and organisation publication proof.
-
-## Tech stack
-
-| Layer | Technology |
+| Area | Status |
 |---|---|
-| Framework | React 19, Vite 8 |
-| Routing | TanStack Router |
-| Styling | Tailwind CSS 4, shadcn/ui (Radix primitives) |
-| State | TanStack Query, React context |
-| Fonts | Fraunces (display), Inter (UI), IBM Plex Mono (on-chain data) |
-| AI (stub) | Gemini-based proof check (currently client-side mock) |
-| Web3 (stub) | `connectWallet()` / `submitToChain()` — placeholder functions for the web3 team |
+| Frontend SPA (Vite + React + TanStack Router) | Live on Vercel |
+| Supabase Auth, Postgres, RLS, Storage | Wired |
+| Donations, proofs, publications, invites | Read + write paths |
+| `org_trust_score` server function | Live |
+| GitHub Actions CI (`npm run build`) | Live |
+| Web3 settlement | Stub (`connectWallet` / `submitToChain`) |
+| Gemini proof check Edge Function | Scaffolded (fail open) |
 
-## Screens
+## Quick start
 
-1. **Landing / cause discovery** — browse causes, see trust scores
-2. **Donate flow** — connect wallet (stub), choose amount, public/private toggle
-3. **Donor dashboard** — receipt cards with real-time status
-4. **Recipient dashboard** — confirm receipt, upload proof, add testimonial
-5. **Public impact page** — shareable proof page per donation
-6. **Organisation dashboard** — fund flow overview and reputation
+```bash
+git clone https://github.com/Tashbme005/HackonChain.git
+cd HackonChain/frontend
+cp .env.example .env   # add VITE_SUPABASE_URL + VITE_SUPABASE_ANON_KEY
+npm install
+npm run dev
+```
 
-## Open questions (for the web3 team)
+App: http://localhost:5173
 
-- Which chain/testnet are we deploying to?
-- What data lives on-chain vs off-chain (must preserve the donor privacy split)?
-- Is the AI counterfeit-check writing a verified/flagged flag on-chain, or staying fully off-chain?
-- Do organisations need multi-sig / approval flows for disbursement?
+More detail: [`frontend/README.md`](frontend/README.md) · [`backend/README.md`](backend/README.md)
 
-## Documentation
+## Repo map
 
-- [`docs/donor-accountability-requirements.md`](docs/donor-accountability-requirements.md) — full requirements, personas, user stories, and MVP scope
-- [`docs/lovable-build-prompt.md`](docs/lovable-build-prompt.md) — original UI/design direction and build prompt
-- [`docs/backend.md`](docs/backend.md) — Supabase backend plan (schema, RLS, auth, AI edge function)
-- [`backend/README.md`](backend/README.md) — how to run migrations and wire `VITE_SUPABASE_*`
+```
+frontend/     OpenImpact web app
+backend/      Supabase schema, seed, Edge Functions
+docs/         Product + backend plans
+assets/       Brand banner + mark
+```
+
+## Stack
+
+React 19 · Vite 8 · TanStack Router · Tailwind CSS 4 · shadcn/ui · Supabase (Auth, Postgres, RLS, Storage) · Vercel · GitHub Actions
+
+## CI and deploy
+
+- **CI:** `.github/workflows/ci.yml` builds `frontend/` on PRs and pushes
+- **CD:** Vercel Git integration (root directory = `frontend`)
+- Optional manual Vercel deploy: `.github/workflows/deploy.yml`
+
+Actions config already used by CI:
+
+- Variable `VITE_SUPABASE_URL`
+- Secret `VITE_SUPABASE_ANON_KEY`
+
+Mirror those in the Vercel project for production.
+
+## Docs
+
+- [`docs/backend.md`](docs/backend.md)
+- [`docs/donor-accountability-requirements.md`](docs/donor-accountability-requirements.md)
+- [`CONTRIBUTING.md`](CONTRIBUTING.md)
 
 ## License
 
 [MIT](LICENSE)
+
+---
+
+<p align="center">
+  <img src="assets/openimpact-logo.svg" alt="OpenImpact" width="72" />
+  <br/><br/>
+  <sub>OpenImpact · Transparency you can see</sub>
+</p>
+
