@@ -14,13 +14,13 @@ import { shortAddress } from "@/lib/openimpact/web3";
 export const Route = createFileRoute("/cause/$orgId")({
   head: () => ({
     meta: [
-      { title: "Cause page — openImpact" },
+      { title: "Cause page — OpenImpact" },
       {
         name: "description",
         content:
           "An organisation's public page: what they do, their proof-of-use score, the people they fund, and every recent receipt with proof attached.",
       },
-      { property: "og:title", content: "Cause page — openImpact" },
+      { property: "og:title", content: "Cause page — OpenImpact" },
       {
         property: "og:description",
         content: "Trust score, funded recipients and recent proof-of-use receipts.",
@@ -74,7 +74,7 @@ function CausePage() {
             </p>
 
             <dl className="mt-8 flex flex-wrap gap-x-10 gap-y-4 border-y border-border py-5">
-              <Stat label="Raised on openImpact" value={formatAmount(raised, "USDC")} />
+              <Stat label="Raised on OpenImpact" value={formatAmount(raised, "USDC")} />
               <Stat label="Receipts" value={String(rows.length)} />
               <Stat label="Accountability score" value={`${score}%`} accent />
               <Stat
@@ -155,7 +155,7 @@ function CausePage() {
       <section className="mx-auto max-w-6xl px-5 pb-4">
         <h2 className="text-3xl">How {org.name} shared this work</h2>
         <p className="mt-2 max-w-xl text-muted-foreground">
-          Organisations on openImpact must publicise the impact of every donation somewhere public —
+          Organisations on OpenImpact must publicise the impact of every donation somewhere public —
           and link the proof here. {published.length} of {rows.length} donations have a publication
           on file.
         </p>

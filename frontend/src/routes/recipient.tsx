@@ -17,7 +17,7 @@ export const Route = createFileRoute("/recipient")({
         content:
           "The recipient's seat: two big buttons — confirm the money arrived, and upload a photo of what it bought — plus every submission you've made and your record so far.",
       },
- { property: "og:title", content: "Recipient profile — openImpact" },
+ { property: "og:title", content: "Recipient profile — OpenImpact" },
       {
         property: "og:description",
         content: "Confirm funds, upload proof of use, and build a record donors can check.",

@@ -15,13 +15,13 @@ export const Route = createFileRoute("/auth")({
   }),
   head: () => ({
     meta: [
-      { title: "Sign in or create your openImpact account" },
+      { title: "Sign in or create your OpenImpact account" },
       {
         name: "description",
         content:
-          "Create a donor, recipient or organisation account on openImpact — or open a pre-filled demo seat and explore each dashboard without signing up.",
+          "Create a donor, recipient or organisation account on OpenImpact — or open a pre-filled demo seat and explore each dashboard without signing up.",
       },
-      { property: "og:title", content: "Sign in to openImpact" },
+      { property: "og:title", content: "Sign in to OpenImpact" },
       {
         property: "og:description",
         content: "Three seats — donor, recipient, organisation. Real account or instant demo.",
@@ -197,7 +197,7 @@ function AuthPage() {
   return (
     <div className="mx-auto max-w-6xl px-5 py-12">
       <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-        Sign in · openImpact
+        Sign in · OpenImpact
       </p>
       <h1 className="mt-3 max-w-2xl text-4xl leading-tight sm:text-5xl">
         Pick your seat at the ledger

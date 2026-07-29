@@ -1,20 +1,21 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 
-import { useLedger } from "@/lib/openimpact/store";
-import { StampBadge } from "@/components/openimpact/StampBadge";
+import { BrandWordmark } from "@/components/openimpact/BrandLogo";
 import { DemoSimulator } from "@/components/openimpact/DemoSimulator";
+import { StampBadge } from "@/components/openimpact/StampBadge";
+import { useLedger } from "@/lib/openimpact/store";
 import { shortAddress } from "@/lib/openimpact/web3";
 
 export const Route = createFileRoute("/")({
   head: () => ({
     meta: [
- { title: "openImpact — see exactly where your donation went" },
+ { title: "OpenImpact — see exactly where your donation went" },
       {
         name: "description",
         content:
           "Give to causes and follow every dollar: each donation becomes a receipt with a status, a timestamp and proof of use uploaded by the person who received it.",
       },
- { property: "og:title", content: "openImpact — see exactly where your donation went" },
+ { property: "og:title", content: "OpenImpact — see exactly where your donation went" },
       {
         property: "og:description",
         content: "A wallet-based donation ledger with photo, receipt and testimonial proof of use.",
@@ -34,15 +35,16 @@ function Landing() {
         <div className="grid gap-12 lg:grid-cols-[1.15fr_0.85fr] lg:items-center">
           <div>
             <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
-              Open ledger giving
+              Transparency you can see
             </p>
-            <h1 className="mt-4 max-w-xl text-4xl leading-[1.05] sm:text-6xl">
+            <BrandWordmark className="mt-4 block text-5xl sm:text-7xl" />
+            <h1 className="mt-4 max-w-xl text-2xl leading-snug text-muted-foreground sm:text-3xl">
               Every donation, a receipt you can verify.
             </h1>
             <p className="mt-5 max-w-lg text-base leading-relaxed text-muted-foreground">
- Most giving ends at "thank you." openImpact keeps going: you see when the money
-              arrives, who received it, what they bought, and the photo and receipt that prove it.
-              Transparency you can see, not just promise.
+              Most giving ends at &ldquo;thank you.&rdquo; OpenImpact keeps going: you see when the
+              money arrives, who received it, what they bought, and the photo and receipt that prove
+              it.
             </p>
             <div className="mt-8 flex flex-wrap items-center gap-4">
               <a

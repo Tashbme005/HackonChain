@@ -492,7 +492,7 @@ export function LedgerProvider({ children }: { children: ReactNode }) {
                 {
                   id: account.entityId!,
                   name: account.name,
-                  tagline: "A new organisation on openImpact",
+                  tagline: "A new organisation on OpenImpact",
                   description:
                     "Add a description of your work so donors know what their money pays for.",
                   imageUrl: "",

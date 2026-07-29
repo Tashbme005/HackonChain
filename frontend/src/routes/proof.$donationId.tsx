@@ -14,13 +14,13 @@ import {
 export const Route = createFileRoute("/proof/$donationId")({
   head: () => ({
     meta: [
-      { title: "Donation receipt — openImpact" },
+      { title: "Donation receipt — OpenImpact" },
       {
         name: "description",
         content:
           "A public receipt: who gave, how much, what it paid for, and the photo and testimonial that prove it.",
       },
-      { property: "og:title", content: "Donation receipt — openImpact" },
+      { property: "og:title", content: "Donation receipt — OpenImpact" },
       {
         property: "og:description",
         content: "See the proof of use behind this donation — photo, description and testimonial.",
@@ -78,7 +78,7 @@ function ProofPage() {
         <div className="flex items-start justify-between gap-4">
           <div>
             <p className="data-mono text-[11px] uppercase tracking-[0.2em] text-muted-foreground">
-              openImpact receipt · {donation.id}
+              OpenImpact receipt · {donation.id}
             </p>
             <h1 className="mt-2 text-3xl leading-tight sm:text-4xl">
               {donation.isPublic ? donation.donorName : "Anonymous"} gave{" "}

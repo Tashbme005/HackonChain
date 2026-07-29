@@ -5,7 +5,7 @@
 @custom-variant dark (&:is(.dark *));
 
 /*
- * openImpact — "Open Ledger" design system.
+ * OpenImpact — "Open Ledger" design system.
  * Paper-light surfaces, ink teal-navy text, mono for verifiable data.
  * All colors in oklch. Never hardcode colors in components.
  */

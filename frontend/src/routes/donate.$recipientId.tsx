@@ -12,13 +12,13 @@ import type { Donation } from "@/lib/openimpact/types";
 export const Route = createFileRoute("/donate/$recipientId")({
   head: () => ({
     meta: [
-      { title: "Send a donation — openImpact" },
+      { title: "Send a donation — OpenImpact" },
       {
         name: "description",
         content:
           "Connect a wallet, choose an amount, and send a donation that comes back to you as a tracked receipt with proof of use.",
       },
-      { property: "og:title", content: "Send a donation — openImpact" },
+      { property: "og:title", content: "Send a donation — OpenImpact" },
       {
         property: "og:description",
         content: "Choose an amount, give publicly or anonymously, and follow the money after it lands.",
