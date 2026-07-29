@@ -1,44 +1,29 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.24;
-
 import "@openzeppelin/contracts/access/Ownable.sol";
-
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
+import "forge-std/Script.sol";
 contract TrustFlow is Ownable {
+    IERC20 public immutable usdc;
 
-    constructor(address initialOwner) Ownable(initialOwner) {}
-
-    enum DonationStatus {
-        Sent,
-        Received,
-        Verified
-    }
-
-    enum VerificationStatus {
-        Pending,
-        Verified,
-        Flagged
-    }
+    enum DonationStatus { Pending, Released }
+    enum VerificationStatus { Pending, Verified, Flagged }
 
     struct Donation {
         uint256 id;
         address donor;
         address organisation;
         address recipient;
-
-        uint256 amount;
+        uint256 amountUSDC;
         uint256 timestamp;
-
         DonationStatus status;
-
         string recipientProofHash;
         VerificationStatus recipientVerification;
-
         string publicationHash;
         VerificationStatus publicationVerification;
     }
 
     uint256 public nextDonationId;
-
     mapping(uint256 => Donation) public donations;
 
     event DonationCreated(
@@ -48,141 +33,82 @@ contract TrustFlow is Ownable {
         address recipient,
         uint256 amount
     );
-
     event RecipientConfirmed(uint256 indexed donationId);
+    event RecipientProofSubmitted(uint256 indexed donationId,string proofHash);
+    event PublicationSubmitted(uint256 indexed donationId,string publicationHash);
+    event RecipientVerificationUpdated(uint256 indexed donationId,VerificationStatus status);
+    event PublicationVerificationUpdated(uint256 indexed donationId,VerificationStatus status);
 
-    event RecipientProofSubmitted(
-        uint256 indexed donationId,
-        string proofHash
-    );
-
-    event PublicationSubmitted(
-        uint256 indexed donationId,
-        string publicationHash
-    );
-
-    event VerificationUpdated(
-        uint256 indexed donationId
-    );
+    constructor(address usdcAddress,address initialOwner) Ownable(initialOwner){
+        require(usdcAddress!=address(0),"Invalid USDC");
+        usdc = IERC20(usdcAddress);
+    }
 
     function createDonation(
         address organisation,
-        address recipient
-    )
-        external
-        payable
-    {
-        require(msg.value > 0, "Donation must be greater than zero");
+        address recipient,
+        uint256 amount
+    ) external {
+        require(organisation!=address(0),"Invalid organisation");
+        require(recipient!=address(0),"Invalid recipient");
+        require(amount>0,"Amount must be >0");
 
-        donations[nextDonationId] = Donation({
-            id: nextDonationId,
-            donor: msg.sender,
-            organisation: organisation,
-            recipient: recipient,
-            amount: msg.value,
-            timestamp: block.timestamp,
-            status: DonationStatus.Sent,
-            recipientProofHash: "",
-            recipientVerification: VerificationStatus.Pending,
-            publicationHash: "",
-            publicationVerification: VerificationStatus.Pending
+        require(usdc.transferFrom(msg.sender,address(this),amount),"USDC transfer failed");
+
+        donations[nextDonationId]=Donation({
+            id:nextDonationId,
+            donor:msg.sender,
+            organisation:organisation,
+            recipient:recipient,
+            amountUSDC:amount,
+            timestamp:block.timestamp,
+            status:DonationStatus.Pending,
+            recipientProofHash:"",
+            recipientVerification:VerificationStatus.Pending,
+            publicationHash:"",
+            publicationVerification:VerificationStatus.Pending
         });
 
-        emit DonationCreated(
-            nextDonationId,
-            msg.sender,
-            organisation,
-            recipient,
-            msg.value
-        );
-
+        emit DonationCreated(nextDonationId,msg.sender,organisation,recipient,amount);
         nextDonationId++;
     }
 
     function confirmReceipt(uint256 donationId) external {
+        Donation storage d = donations[donationId];
+        require(msg.sender==d.recipient,"Not recipient");
+        require(d.status==DonationStatus.Pending,"Already released");
 
-        Donation storage donation = donations[donationId];
-
-        require(msg.sender == donation.recipient);
-
-        donation.status = DonationStatus.Received;
-
-        payable(donation.recipient).transfer(donation.amount);
+        d.status=DonationStatus.Released;
+        require(usdc.transfer(d.recipient,d.amountUSDC),"USDC payout failed");
 
         emit RecipientConfirmed(donationId);
     }
 
-    function submitRecipientProof(
-        uint256 donationId,
-        string calldata proofHash
-    )
-        external
-    {
-        Donation storage donation = donations[donationId];
-
-        require(msg.sender == donation.recipient);
-
-        donation.recipientProofHash = proofHash;
-
-        emit RecipientProofSubmitted(
-            donationId,
-            proofHash
-        );
+    function submitRecipientProof(uint256 donationId,string calldata proofHash) external {
+        Donation storage d = donations[donationId];
+        require(msg.sender==d.recipient,"Not recipient");
+        d.recipientProofHash=proofHash;
+        emit RecipientProofSubmitted(donationId,proofHash);
     }
 
-    function submitPublication(
-        uint256 donationId,
-        string calldata publicationHash
-    )
-        external
-    {
-        Donation storage donation = donations[donationId];
-
-        require(msg.sender == donation.organisation);
-
-        donation.publicationHash = publicationHash;
-
-        emit PublicationSubmitted(
-            donationId,
-            publicationHash
-        );
+    function submitPublication(uint256 donationId,string calldata publicationHash) external {
+        Donation storage d = donations[donationId];
+        require(msg.sender==d.organisation,"Not organisation");
+        d.publicationHash=publicationHash;
+        emit PublicationSubmitted(donationId,publicationHash);
     }
 
-    function verifyRecipientProof(
-        uint256 donationId,
-        VerificationStatus status
-    )
-        external
-        onlyOwner
-    {
-        donations[donationId].recipientVerification = status;
-
-        if(status == VerificationStatus.Verified){
-            donations[donationId].status = DonationStatus.Verified;
-        }
-
-        emit VerificationUpdated(donationId);
+    function updateRecipientVerification(uint256 donationId,VerificationStatus status) external onlyOwner {
+        donations[donationId].recipientVerification=status;
+        emit RecipientVerificationUpdated(donationId,status);
     }
 
-    function verifyPublication(
-        uint256 donationId,
-        VerificationStatus status
-    )
-        external
-        onlyOwner
-    {
-        donations[donationId].publicationVerification = status;
-
-        emit VerificationUpdated(donationId);
+    function updatePublicationVerification(uint256 donationId,VerificationStatus status) external onlyOwner {
+        donations[donationId].publicationVerification=status;
+        emit PublicationVerificationUpdated(donationId,status);
     }
 
-    function getDonation(
-        uint256 donationId
-    )
-        external
-        view
-        returns (Donation memory)
-    {
+    function getDonation(uint256 donationId) external view returns(Donation memory){
         return donations[donationId];
     }
 }
