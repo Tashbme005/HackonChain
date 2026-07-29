@@ -4,13 +4,13 @@ import { Eye, EyeOff } from "lucide-react";
 export const Route = createFileRoute("/trust")({
   head: () => ({
     meta: [
-      { title: "Trust & privacy — what's public on OpenImpact" },
+      { title: "OpenImpact" },
       {
         name: "description",
         content:
           "Plain-language answers: your name is optional, transactions are traceable by amount and wallet, and personal details never go on the ledger.",
       },
-      { property: "og:title", content: "Trust & privacy on OpenImpact" },
+      { property: "og:title", content: "OpenImpact" },
       {
         property: "og:description",
         content: "What's public, what's private, and what you control — in plain words.",

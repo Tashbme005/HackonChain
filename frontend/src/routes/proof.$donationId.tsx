@@ -14,13 +14,13 @@ import {
 export const Route = createFileRoute("/proof/$donationId")({
   head: () => ({
     meta: [
-      { title: "Donation receipt — OpenImpact" },
+      { title: "OpenImpact" },
       {
         name: "description",
         content:
           "A public receipt: who gave, how much, what it paid for, and the photo and testimonial that prove it.",
       },
-      { property: "og:title", content: "Donation receipt — OpenImpact" },
+      { property: "og:title", content: "OpenImpact" },
       {
         property: "og:description",
         content: "See the proof of use behind this donation — photo, description and testimonial.",
