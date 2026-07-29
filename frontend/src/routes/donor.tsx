@@ -15,7 +15,7 @@ export const Route = createFileRoute("/donor")({
         content:
           "The donor's seat: your wallet, your giving history as receipt cards, and the current status and proof of use behind every donation you've made.",
       },
-      { property: "og:title", content: "Donor profile — openImpact" },
+      { property: "og:title", content: "Donor profile — OpenImpact" },
       {
         property: "og:description",
         content: "Total given, causes supported, and a verified receipt for each donation.",

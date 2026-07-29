@@ -9,13 +9,13 @@ import { shortAddress } from "@/lib/openimpact/web3";
 export const Route = createFileRoute("/link-org")({
   head: () => ({
     meta: [
-      { title: "Find your organisation — openImpact recipients" },
+      { title: "Find your organisation — OpenImpact recipients" },
       {
         name: "description",
         content:
-          "Signed up as a recipient without an invite link? Search the organisations on openImpact and link your account to the one you work with.",
+          "Signed up as a recipient without an invite link? Search the organisations on OpenImpact and link your account to the one you work with.",
       },
-      { property: "og:title", content: "Find your organisation — openImpact" },
+      { property: "og:title", content: "Find your organisation — OpenImpact" },
       {
         property: "og:description",
         content: "Search organisations and link your recipient account — no invite needed.",

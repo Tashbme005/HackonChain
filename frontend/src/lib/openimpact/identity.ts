@@ -26,7 +26,7 @@ export async function verifyRecipientIdentity(recipientId: string): Promise<KycR
   await new Promise((r) => setTimeout(r, 400));
   return {
     status: "verified",
-    attestation: "Identity verified by openImpact — legal name withheld from organisations.",
+    attestation: "Identity verified by OpenImpact — legal name withheld from organisations.",
     checkedAt: new Date().toISOString(),
   };
 }
