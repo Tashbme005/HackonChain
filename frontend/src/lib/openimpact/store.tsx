@@ -15,7 +15,7 @@ import { mockTxHash } from "./web3";
 import type { Donation, Organisation, ProofOfUse, PublicationProof, Recipient } from "./types";
 import { isFullyAccounted } from "./types";
 
-const STORAGE_KEY = "openimpact.state.v7";
+const STORAGE_KEY = "openimpact.state.v8";
 
 export type Role = "donor" | "recipient" | "organisation";
 

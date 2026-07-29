@@ -1,6 +1,7 @@
 import { createFileRoute, Link } from "@tanstack/react-router";
 import { Globe, Lock } from "lucide-react";
 
+import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
 import { ReceiptCard } from "@/components/openimpact/ReceiptCard";
 import { formatAmount, formatStamp, useLedger, useRequireRole } from "@/lib/openimpact/store";
 import { shortAddress } from "@/lib/openimpact/web3";
@@ -37,6 +38,13 @@ function DonorProfile() {
 
   return (
     <div className="mx-auto max-w-6xl px-5 py-10">
+      <Breadcrumbs
+        crumbs={[
+          { label: "Home", to: "/" },
+          { label: "Donor dashboard" },
+        ]}
+        className="mb-4"
+      />
       <p className="data-mono text-xs uppercase tracking-[0.2em] text-muted-foreground">
         Donor view
       </p>

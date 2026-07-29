@@ -25,6 +25,16 @@ export interface ProofOfUse {
   submittedAt: string;
   flagged?: boolean;
   /**
+   * Optional details the recipient chose to share with THIS donation's donor only.
+   * Never shown to the organisation or on the public receipt — only when the
+   * signed-in donor matches the donation.
+   */
+  donorOnlyShare?: {
+    contact?: string;
+    social?: string;
+    note?: string;
+  };
+  /**
    * Result of the automated counterfeit check (Gemini, via Lovable AI).
    * `aiReason` is the short plain-language line shown to humans — never raw
    * model output. `aiInternalNote` is for platform/org oversight only.
@@ -32,6 +42,15 @@ export interface ProofOfUse {
   aiChecked?: boolean;
   aiReason?: string;
   aiInternalNote?: string;
+}
+
+/** True when a proof carries any donor-only contact/social share. */
+export function hasDonorOnlyShare(
+  proof?: Pick<ProofOfUse, "donorOnlyShare"> | null,
+) {
+  const s = proof?.donorOnlyShare;
+  if (!s) return false;
+  return Boolean(s.contact?.trim() || s.social?.trim() || s.note?.trim());
 }
 
 /**
