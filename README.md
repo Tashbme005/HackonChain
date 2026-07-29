@@ -37,6 +37,20 @@ npm run format     # Prettier
 
 The frontend is deployed on **Vercel** with the root directory set to `frontend`. The included `vercel.json` handles the build command, output directory, and SPA rewrites.
 
+### CI / CD (GitHub Actions)
+
+- **CI** (`.github/workflows/ci.yml`) — on PRs to `main` and pushes that touch `frontend/`, installs deps and runs `npm run build` (TypeScript + Vite).
+- **CD** — production deploys via the **Vercel Git integration** (recommended). Optional Actions deploy is in `.github/workflows/deploy.yml` if you set `VERCEL_TOKEN`, `VERCEL_ORG_ID`, and `VERCEL_PROJECT_ID` secrets.
+
+Optional repo configuration for builds that should bake in Supabase:
+
+| Name | Type | Where |
+|---|---|---|
+| `VITE_SUPABASE_URL` | Variable | Settings → Secrets and variables → Actions → Variables |
+| `VITE_SUPABASE_ANON_KEY` | Secret | Settings → Secrets and variables → Actions → Secrets |
+
+Also set the same keys in the Vercel project Environment Variables for production.
+
 ## Project summary
 
 ### The problem
