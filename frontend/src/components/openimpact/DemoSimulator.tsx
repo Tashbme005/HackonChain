@@ -126,7 +126,7 @@ export function DemoSimulator() {
         const result = await createDonationOnChain({
           organisation: org.walletAddress,
           recipient: recipient.walletAddress,
-          amountEth: script.amount,
+          amountUsdc: script.amount,
         }).catch(() => ({
           txHash: mockTxHash(),
           onChainDonationId: undefined as string | undefined,

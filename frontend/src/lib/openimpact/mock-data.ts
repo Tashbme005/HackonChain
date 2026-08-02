@@ -109,7 +109,7 @@ export const MOCK_ORGS: Organisation[] = [
     description:
       "We drill and repair boreholes so families stop walking six kilometres for water. Every pump we fix gets photographed, dated and signed off by the village committee.",
     imageUrl: orgWater,
-    walletAddress: "0x3fA1c8B7d4E29aF06b15C8d2937eB4a1D6c05E88",
+    walletAddress: "0xCe5E6dA2A6B03c24b3A0578Aa5FbA9c271F68f28",
     reputationScore: 96,
     recipientIds: ["rcp-amina", "rcp-joseph"],
     generalProofs: [GENERAL_KILIFI],
@@ -159,7 +159,7 @@ export const MOCK_RECIPIENTS: Recipient[] = [
     pseudonym: "Coral-4821",
     orgId: "org-kilifi",
     story: "Runs the water committee in Mtwapa village, 240 households.",
-    walletAddress: "0xA1d4F7c02B9e35D6a8C1740bE39fD25c60B8a913",
+    walletAddress: "0xe268a37D13b668cA28a6338D0e9eBFce32f49cF1",
     proofOfUse: PROOF_AMINA_PUMP,
     reputationScore: 98,
   },

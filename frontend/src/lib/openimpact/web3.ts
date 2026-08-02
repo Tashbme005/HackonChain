@@ -4,27 +4,18 @@ import {
   custom,
   decodeEventLog,
   http,
-  parseEther,
+  parseUnits,
   type Address,
   type Hash,
 } from "viem";
-import { sepolia } from "viem/chains";
+import { baseSepolia } from "viem/chains";
 
+import { MOCK_USDC_ADDRESS, TRUSTFLOW_ADDRESS } from "@/contracts/addresses";
+import { mockUsdcAbi } from "@/contracts/mock-usdc-abi";
 import { hashProofContent, hashPublicationContent } from "./content-hash";
-import { checkProofAuthenticity } from "./proof-check.functions";
 import { openImpactAbi } from "./openimpact-abi";
-
-/**
- * Web3 layer for OpenImpact.
- *
- * Same stack as the Solidity contract: Ethereum (Sepolia by default) via viem.
- * Browser wallets (MetaMask, Rabby, etc.) inject `window.ethereum`; that is how
- * users sign donate / confirm / proof txs. This is not account sign-in.
- *
- * When `VITE_OPENIMPACT_CONTRACT_ADDRESS` is set, donate / confirm / proof /
- * publication hash calls hit the deployed contract. Otherwise stubs keep the
- * demo usable without a wallet or testnet.
- */
+import { checkProofAuthenticity } from "./proof-check.functions";
+import { approveUSDC, checkUSDCAllowance } from "./services/token";
 
 export interface WalletConnection {
   address: string;
@@ -33,15 +24,20 @@ export interface WalletConnection {
 
 export interface ChainDonationResult {
   txHash: string;
-  /** On-chain `uint256` donation id from OpenImpact. */
   onChainDonationId?: string;
 }
 
 const MOCK_ADDRESS = "0x7A4f9C1bE2d83a5F0c6D18b4E9aA37cC90f2B5d1";
 const ONCHAIN_MAP_PREFIX = "openimpact:onchain:";
 
-const contractAddress = (import.meta.env.VITE_OPENIMPACT_CONTRACT_ADDRESS ?? "").trim() as Address | "";
-const chainIdEnv = Number(import.meta.env.VITE_CHAIN_ID ?? 11155111);
+const envContractAddress = (import.meta.env.VITE_OPENIMPACT_CONTRACT_ADDRESS ?? "").trim();
+export const contractAddress: Address = (
+  envContractAddress && /^0x[a-fA-F0-9]{40}$/.test(envContractAddress)
+    ? envContractAddress
+    : TRUSTFLOW_ADDRESS
+) as Address;
+
+const chainIdEnv = Number(import.meta.env.VITE_CHAIN_ID ?? baseSepolia.id);
 const rpcUrl = (import.meta.env.VITE_RPC_URL ?? "").trim();
 
 export function isContractConfigured(): boolean {
@@ -49,8 +45,8 @@ export function isContractConfigured(): boolean {
 }
 
 function chainForId(id: number) {
-  if (id === sepolia.id) return sepolia;
-  return { ...sepolia, id, name: `chain-${id}` };
+  if (id === baseSepolia.id) return baseSepolia;
+  return { ...baseSepolia, id, name: `chain-${id}` };
 }
 
 function ethereumProvider(): EthereumProvider | null {
@@ -85,27 +81,25 @@ export async function connectWallet(): Promise<WalletConnection> {
   const provider = ethereumProvider();
   if (!provider) {
     await new Promise((r) => setTimeout(r, 400));
-    return { address: MOCK_ADDRESS, chain: isContractConfigured() ? "sepolia" : "stub" };
+    return { address: MOCK_ADDRESS, chain: "base-sepolia" };
   }
 
   const accounts = (await provider.request({ method: "eth_requestAccounts" })) as string[];
   const address = accounts[0];
   if (!address) throw new Error("No wallet account returned.");
 
-  if (isContractConfigured()) {
-    try {
-      await provider.request({
-        method: "wallet_switchEthereumChain",
-        params: [{ chainId: `0x${chainIdEnv.toString(16)}` }],
-      });
-    } catch {
-      /* user may reject; continue */
-    }
+  try {
+    await provider.request({
+      method: "wallet_switchEthereumChain",
+      params: [{ chainId: `0x${chainIdEnv.toString(16)}` }],
+    });
+  } catch {
+    /* user may reject; continue */
   }
 
   const chainHex = (await provider.request({ method: "eth_chainId" })) as string;
   const id = Number.parseInt(chainHex, 16);
-  return { address, chain: id === sepolia.id ? "sepolia" : `chain-${id}` };
+  return { address, chain: id === baseSepolia.id ? "base-sepolia" : `chain-${id}` };
 }
 
 export async function disconnectWallet(): Promise<void> {
@@ -115,7 +109,6 @@ export async function disconnectWallet(): Promise<void> {
 async function getClients() {
   const provider = ethereumProvider();
   if (!provider) throw new Error("No injected wallet (window.ethereum) found.");
-  if (!isContractConfigured()) throw new Error("Contract address is not configured.");
 
   const chain = chainForId(chainIdEnv);
   const walletClient = createWalletClient({
@@ -148,37 +141,152 @@ function parseDonationCreatedId(logs: { data: Hash; topics: [] | [Hash, ...Hash[
   }
   return undefined;
 }
+async function mintDemoTokensToRecipient(donationId: bigint) {
+  const { walletClient, publicClient, account } = await getClients();
 
+  // Read the donation from TrustFlow
+  const donation = await publicClient.readContract({
+    address: contractAddress,
+    abi: openImpactAbi,
+    functionName: "getDonation",
+    args: [donationId],
+  });
+
+  const recipient = donation.recipient as Address;
+  const amount = donation.amountUSDC;
+
+  console.log("Demo release");
+  console.log("Recipient:", recipient);
+  console.log("Amount:", amount.toString());
+
+  const { request } = await publicClient.simulateContract({
+    address: MOCK_USDC_ADDRESS,
+    abi: mockUsdcAbi,
+    functionName: "mint",
+    args: [recipient, amount],
+    account,
+  });
+
+  const hash = await walletClient.writeContract(request);
+
+  await publicClient.waitForTransactionReceipt({
+    hash,
+  });
+
+  console.log("Demo funds released.");
+}
 /**
- * Escrow native ETH on-chain (v1). Amount is treated as ETH when the contract
- * is configured; otherwise a stub tx hash is returned.
+  Escrow mUSDC on-chain (TrustFlow contract on Base Sepolia).
+  Includes step-by-step diagnostic logging and direct transferFrom simulation to catch token errors.
  */
 export async function createDonationOnChain(params: {
   organisation: string;
   recipient: string;
-  /** ETH amount when contract is live; ignored by the stub. */
-  amountEth: number;
+  /** Amount in USDC (e.g. 50 = $50 mUSDC). */
+  amountUsdc: number;
 }): Promise<ChainDonationResult> {
-  if (!isContractConfigured()) {
+  const provider = ethereumProvider();
+  if (!provider) {
     await new Promise((r) => setTimeout(r, 500));
     return { txHash: mockTxHash() };
   }
 
   const { walletClient, publicClient, account } = await getClients();
-  const value = parseEther(String(params.amountEth));
+  const value = parseUnits(String(params.amountUsdc), 6);
 
-  const hash = await walletClient.writeContract({
-    address: contractAddress as Address,
+  console.log("=== [TrustFlow Diagnostics Start] ===");
+  console.log("Configured TRUSTFLOW_ADDRESS:", contractAddress);
+  console.log("Configured MOCK_USDC_ADDRESS:", MOCK_USDC_ADDRESS);
+  console.log("User Connected Wallet:", account);
+  console.log("Donation Amount USDC:", params.amountUsdc, "Raw Value:", value.toString());
+
+  // Diagnostic 1: Query TrustFlow.usdc() on-chain
+  let onChainUsdcAddress: Address = MOCK_USDC_ADDRESS as Address;
+  try {
+    const fetchedAddress = await publicClient.readContract({
+      address: contractAddress,
+      abi: openImpactAbi,
+      functionName: "usdc",
+    });
+    console.log("On-Chain TrustFlow.usdc() returned:", fetchedAddress);
+    if (fetchedAddress && /^0x[a-fA-F0-9]{40}$/.test(fetchedAddress)) {
+      onChainUsdcAddress = fetchedAddress as Address;
+    }
+  } catch (err) {
+    console.warn("Could not read usdc() from TrustFlow contract on-chain:", err);
+  }
+
+  const isMismatch = onChainUsdcAddress.toLowerCase() !== MOCK_USDC_ADDRESS.toLowerCase();
+  if (isMismatch) {
+    console.warn(
+      `⚠️ ADDRESS MISMATCH DETECTED!\nTrustFlow on-chain usdc(): ${onChainUsdcAddress}\nFrontend MOCK_USDC_ADDRESS: ${MOCK_USDC_ADDRESS}\nTrustFlow will attempt transferFrom on ${onChainUsdcAddress}!`,
+    );
+  }
+
+  // Diagnostic 2: Read balance & allowance on target USDC contract
+  const userBalance = await publicClient.readContract({
+    address: onChainUsdcAddress,
+    abi: mockUsdcAbi,
+    functionName: "balanceOf",
+    args: [account],
+  });
+  const userAllowance = await publicClient.readContract({
+    address: onChainUsdcAddress,
+    abi: mockUsdcAbi,
+    functionName: "allowance",
+    args: [account, contractAddress],
+  });
+
+  console.log(`Balance of user on token ${onChainUsdcAddress}:`, userBalance.toString());
+  console.log(`Allowance for TrustFlow (${contractAddress}) on token ${onChainUsdcAddress}:`, userAllowance.toString());
+
+  if (userBalance < value) {
+    throw new Error(
+      `Insufficient mUSDC balance in your wallet on token ${onChainUsdcAddress}. Balance: ${userBalance.toString()}, Needed: ${value.toString()}. Click "🚰 Get 1,000 Test mUSDC" first.`,
+    );
+  }
+
+  // Diagnostic 3: Approve if needed and wait for confirmation receipt
+  if (userAllowance < value) {
+    console.log(`Allowance (${userAllowance}) < needed (${value}). Requesting approve...`);
+    await approveUSDC(params.amountUsdc, contractAddress);
+    console.log("Approve confirmed on-chain.");
+  } else {
+    console.log("Allowance is sufficient.");
+  }
+
+  // Diagnostic 4: Directly simulate transferFrom on the USDC contract
+  try {
+    console.log(`Simulating transferFrom on USDC contract ${onChainUsdcAddress}...`);
+    await publicClient.simulateContract({
+      address: onChainUsdcAddress,
+      abi: mockUsdcAbi,
+      functionName: "transferFrom",
+      args: [account, contractAddress, value],
+      account: contractAddress,
+    });
+    console.log("transferFrom simulation succeeded!");
+  } catch (err: any) {
+    console.error("❌ transferFrom simulation FAILED with error:", err);
+    if (err?.shortMessage) console.error("Short Message:", err.shortMessage);
+  }
+
+  // Step 5: Simulate TrustFlow.createDonation(org, recipient, value)
+  console.log("Simulating TrustFlow.createDonation...");
+  const { request } = await publicClient.simulateContract({
+    address: contractAddress,
     abi: openImpactAbi,
     functionName: "createDonation",
-    args: [params.organisation as Address, params.recipient as Address],
-    value,
+    args: [params.organisation as Address, params.recipient as Address, value],
     account,
-    chain: chainForId(chainIdEnv),
   });
+
+  console.log("TrustFlow.createDonation simulation succeeded! Submitting transaction to wallet...");
+  const hash = await walletClient.writeContract(request);
 
   const receipt = await publicClient.waitForTransactionReceipt({ hash });
   const onChainDonationId = parseDonationCreatedId(receipt.logs);
+  console.log("=== [TrustFlow Diagnostics End - Tx Complete] ===", hash);
   return { txHash: hash, onChainDonationId };
 }
 
@@ -186,7 +294,8 @@ export async function confirmReceiptOnChain(
   offChainDonationId: string,
   knownOnChainId?: string,
 ): Promise<string> {
-  if (!isContractConfigured()) {
+  const provider = ethereumProvider();
+  if (!provider) {
     await new Promise((r) => setTimeout(r, 400));
     return mockTxHash();
   }
@@ -197,20 +306,21 @@ export async function confirmReceiptOnChain(
     onChainId = BigInt(knownOnChainId);
   }
   if (onChainId == null) {
-    // No mapping (donation created while stubbing) — skip chain call.
     return mockTxHash();
   }
 
   const { walletClient, publicClient, account } = await getClients();
-  const hash = await walletClient.writeContract({
-    address: contractAddress as Address,
+  const { request } = await publicClient.simulateContract({
+    address: contractAddress,
     abi: openImpactAbi,
     functionName: "confirmReceipt",
     args: [onChainId],
     account,
-    chain: chainForId(chainIdEnv),
   });
+
+  const hash = await walletClient.writeContract(request);
   await publicClient.waitForTransactionReceipt({ hash });
+  await mintDemoTokensToRecipient(onChainId);
   return hash;
 }
 
@@ -225,8 +335,8 @@ export async function submitProofHashOnChain(
     testimonial: proof.testimonial,
   });
 
-  if (!isContractConfigured()) {
-    // eslint-disable-next-line no-console
+  const provider = ethereumProvider();
+  if (!provider) {
     console.log("[stub] proof hash", contentHash);
     await new Promise((r) => setTimeout(r, 300));
     return mockTxHash();
@@ -236,14 +346,15 @@ export async function submitProofHashOnChain(
   if (onChainId == null) return mockTxHash();
 
   const { walletClient, publicClient, account } = await getClients();
-  const hash = await walletClient.writeContract({
-    address: contractAddress as Address,
+  const { request } = await publicClient.simulateContract({
+    address: contractAddress,
     abi: openImpactAbi,
     functionName: "submitRecipientProof",
     args: [onChainId, contentHash],
     account,
-    chain: chainForId(chainIdEnv),
   });
+
+  const hash = await walletClient.writeContract(request);
   await publicClient.waitForTransactionReceipt({ hash });
   return hash;
 }
@@ -259,8 +370,8 @@ export async function submitPublicationHashOnChain(
     caption: publication.caption,
   });
 
-  if (!isContractConfigured()) {
-    // eslint-disable-next-line no-console
+  const provider = ethereumProvider();
+  if (!provider) {
     console.log("[stub] publication hash", contentHash);
     await new Promise((r) => setTimeout(r, 300));
     return mockTxHash();
@@ -270,22 +381,19 @@ export async function submitPublicationHashOnChain(
   if (onChainId == null) return mockTxHash();
 
   const { walletClient, publicClient, account } = await getClients();
-  const hash = await walletClient.writeContract({
-    address: contractAddress as Address,
+  const { request } = await publicClient.simulateContract({
+    address: contractAddress,
     abi: openImpactAbi,
     functionName: "submitPublication",
     args: [onChainId, contentHash],
     account,
-    chain: chainForId(chainIdEnv),
   });
+
+  const hash = await walletClient.writeContract(request);
   await publicClient.waitForTransactionReceipt({ hash });
   return hash;
 }
 
-/**
- * Dispatcher kept for call sites that still pass a loose payload.
- * Prefer the typed helpers above for new code.
- */
 export async function submitToChain(payload: Record<string, unknown>): Promise<string> {
   const action = typeof payload.action === "string" ? payload.action : "createDonation";
 
@@ -316,7 +424,7 @@ export async function submitToChain(payload: Record<string, unknown>): Promise<s
     const result = await createDonationOnChain({
       organisation: String(payload.organisation ?? payload.to ?? ""),
       recipient: String(payload.recipient ?? payload.to ?? ""),
-      amountEth: Number(payload.amount ?? 0),
+      amountUsdc: Number(payload.amount ?? 0),
     });
     if (result.onChainDonationId && typeof payload.offChainDonationId === "string") {
       rememberOnChainDonationId(payload.offChainDonationId, result.onChainDonationId);
@@ -324,7 +432,6 @@ export async function submitToChain(payload: Record<string, unknown>): Promise<s
     return result.txHash;
   }
 
-  // eslint-disable-next-line no-console
   console.log("[stub] submitToChain", payload);
   await new Promise((r) => setTimeout(r, 400));
   return mockTxHash();

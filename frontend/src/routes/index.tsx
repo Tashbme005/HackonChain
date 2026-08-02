@@ -146,7 +146,7 @@ function AboutHome() {
                   </p>
                   <p className="mt-2 text-xs text-muted-foreground sm:text-sm">
                     Recipient ·{" "}
-                    {shortAddress("0xA1d4F7c02B9e35D6a8C1740bE39fD25c60B8a913")}
+                    {shortAddress("0xe268a37D13b668cA28a6338D0e9eBFce32f49cF1")}
                   </p>
                 </div>
               </div>

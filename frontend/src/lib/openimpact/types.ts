@@ -102,6 +102,8 @@ export interface PublicationProof {
   submittedAt: string;
   /** Org account / staff label that filed it. */
   submittedBy?: string;
+  aiApproved?: boolean;
+  aiReason?: string;
 }
 
 export type PublicationStatus = "pending" | "published";

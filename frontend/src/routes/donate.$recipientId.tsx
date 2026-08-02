@@ -1,5 +1,5 @@
 import { createFileRoute, Link, useNavigate } from "@tanstack/react-router";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 
 import { Breadcrumbs } from "@/components/openimpact/Breadcrumbs";
 import { StampBadge } from "@/components/openimpact/StampBadge";
@@ -15,6 +15,7 @@ import {
 } from "@/lib/openimpact/web3";
 import { recipientPublicLabel } from "@/lib/openimpact/types";
 import type { Donation } from "@/lib/openimpact/types";
+import { checkUSDCBalance, mintTestUSDC } from "@/lib/openimpact/services/token";
 
 export const Route = createFileRoute("/donate/$recipientId")({
   head: () => ({
@@ -51,8 +52,16 @@ function DonateFlow() {
   const [isPublic, setIsPublic] = useState(true);
   const [note, setNote] = useState("");
   const [busy, setBusy] = useState(false);
+  const [minting, setMinting] = useState(false);
+  const [usdcBalance, setUsdcBalance] = useState<string | null>(null);
   const [created, setCreated] = useState<Donation | null>(null);
-  const assetLabel = isContractConfigured() ? "ETH" : "USDC";
+  const assetLabel = "mUSDC";
+
+  useEffect(() => {
+    if (walletAddress) {
+      checkUSDCBalance(walletAddress).then(setUsdcBalance);
+    }
+  }, [walletAddress]);
 
   if (!recipient) {
     return (
@@ -64,9 +73,33 @@ function DonateFlow() {
 
   async function onConnect() {
     setBusy(true);
-    const conn = await connectWallet();
-    setWalletAddress(conn.address);
-    setBusy(false);
+    try {
+      const conn = await connectWallet();
+      setWalletAddress(conn.address);
+      const bal = await checkUSDCBalance(conn.address);
+      setUsdcBalance(bal);
+    } catch (err) {
+      console.error(err);
+    } finally {
+      setBusy(false);
+    }
+  }
+
+  async function onMintFaucet() {
+    setMinting(true);
+    try {
+      await mintTestUSDC(walletAddress || undefined, 1000);
+      if (walletAddress) {
+        const bal = await checkUSDCBalance(walletAddress);
+        setUsdcBalance(bal);
+      }
+      window.alert("Successfully minted 1,000 mUSDC to your wallet!");
+    } catch (err) {
+      console.error(err);
+      window.alert(err instanceof Error ? err.message : "Faucet minting failed.");
+    } finally {
+      setMinting(false);
+    }
   }
 
   async function onSend() {
@@ -75,19 +108,17 @@ function DonateFlow() {
       if (!org?.walletAddress) {
         throw new Error("Organisation wallet is missing.");
       }
-      const onChain = isContractConfigured();
-      const currency = onChain ? "ETH" : "USDC";
       const chain = await createDonationOnChain({
         organisation: org.walletAddress,
         recipient: recipient!.walletAddress,
-        amountEth: amount,
+        amountUsdc: amount,
       });
       const donation: Donation = {
         id: `dn-${crypto.randomUUID().slice(0, 8)}`,
         donorName: isPublic ? currentDonorName : "Anonymous",
         isPublic,
         amount,
-        currency,
+        currency: assetLabel,
         recipientId: recipient!.id,
         orgId: recipient!.orgId,
         status: "pending",
@@ -131,12 +162,33 @@ function DonateFlow() {
       {step === "amount" && (
         <div className="mt-8 space-y-8 border border-border bg-card p-6">
           <div>
-            <h2 className="text-lg">Your wallet</h2>
+            <div className="flex items-center justify-between">
+              <h2 className="text-lg">Your wallet</h2>
+              {walletAddress && (
+                <button
+                  type="button"
+                  onClick={onMintFaucet}
+                  disabled={minting}
+                  className="inline-flex items-center gap-1.5 rounded-full border border-primary/30 bg-primary/10 px-3 py-1 text-xs font-semibold text-primary transition-colors hover:bg-primary/20 disabled:opacity-60"
+                >
+                  {minting && <span className="size-3 animate-spin rounded-full border-2 border-current border-t-transparent" />}
+                  {minting ? "Minting…" : "🚰 Get 1,000 Test mUSDC"}
+                </button>
+              )}
+            </div>
+
             {walletAddress ? (
-              <p className="mt-2 text-sm text-muted-foreground">
-                Connected as{" "}
-                <span className="data-mono text-foreground">{shortAddress(walletAddress)}</span>
-              </p>
+              <div className="mt-2 text-sm text-muted-foreground">
+                <p>
+                  Connected as{" "}
+                  <span className="data-mono text-foreground">{shortAddress(walletAddress)}</span>
+                </p>
+                {usdcBalance !== null && (
+                  <p className="mt-1 text-xs">
+                    Balance: <span className="data-mono font-medium text-foreground">{usdcBalance} mUSDC</span>
+                  </p>
+                )}
+              </div>
             ) : (
               <>
                 <button
@@ -149,8 +201,7 @@ function DonateFlow() {
                   {busy ? "Connecting to your wallet…" : "Connect wallet"}
                 </button>
                 <p className="mt-2 max-w-md text-xs text-muted-foreground">
-                  A wallet is like a public account for sending and receiving funds. If you don't have
-                  one yet, connecting will walk you through creating one.
+                  Connect a wallet (MetaMask/Base Sepolia) to send USDC to the TrustFlow smart contract.
                 </p>
               </>
             )}
@@ -224,7 +275,7 @@ function DonateFlow() {
       {step === "confirm" && (
         <div className="mt-8">
           <ReceiptShell>
-            <h2 className="text-2xl">Check this over</h2>
+            <h2 className="text-2xl font-serif">Check this over</h2>
             <dl className="mt-4 space-y-2 text-sm">
               <Row label="To">{recipientPublicLabel(recipient)}</Row>
               <Row label="Organisation">{org?.name ?? "Direct"}</Row>
@@ -237,6 +288,15 @@ function DonateFlow() {
               </Row>
               {note && <Row label="Note">{note}</Row>}
             </dl>
+
+            <div className="mt-4 rounded-lg bg-muted/60 p-3 text-xs text-muted-foreground">
+              <p className="font-semibold text-foreground">💡 2-Step Smart Contract Execution:</p>
+              <ol className="mt-1 list-decimal space-y-0.5 pl-4">
+                <li>Approve TrustFlow contract to spend {amount} mUSDC</li>
+                <li>Execute <code>createDonation()</code> to hold funds in escrow</li>
+              </ol>
+            </div>
+
             <div className="dotted-rule mt-5 pt-5">
               <p className="text-sm text-muted-foreground">
                 Once sent, {recipientPublicLabel(recipient)} confirms receipt and uploads proof of what the money
@@ -250,7 +310,7 @@ function DonateFlow() {
                   className="inline-flex items-center gap-2 rounded-full bg-primary px-6 py-3 text-sm font-medium text-primary-foreground transition-opacity hover:opacity-90 disabled:opacity-60"
                 >
                   {busy && <span className="size-4 animate-spin rounded-full border-2 border-current border-t-transparent" />}
-                  {busy ? "Submitting to the ledger…" : `Send ${formatAmount(amount, assetLabel)}`}
+                  {busy ? "Executing approval & escrow…" : `Send ${formatAmount(amount, assetLabel)}`}
                 </button>
                 <button
                   type="button"

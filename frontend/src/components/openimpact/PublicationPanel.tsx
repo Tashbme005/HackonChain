@@ -1,7 +1,7 @@
 import { ExternalLink, Megaphone, Trash2 } from "lucide-react";
 import { useState } from "react";
 import { toast } from "sonner";
-
+import { validatePublicationWithAI } from "@/lib/openimpact/ai";
 import { formatAmount, formatStamp, useLedger } from "@/lib/openimpact/store";
 import {
   PUBLICATION_STATUS_LABEL,
@@ -68,6 +68,7 @@ export function PublicationPanel({ orgId }: { orgId: string }) {
             <tr className="border-b border-border text-left text-[11px] uppercase tracking-widest text-muted-foreground">
               <th className="px-4 py-3 font-medium">Donation</th>
               <th className="px-4 py-3 font-medium">Publication status</th>
+              <th>AI verification</th>
               <th className="px-4 py-3 font-medium">Where it was shared</th>
               <th className="px-4 py-3 font-medium">Accounted</th>
               <th className="px-4 py-3 font-medium" />
@@ -76,7 +77,7 @@ export function PublicationPanel({ orgId }: { orgId: string }) {
           <tbody>
             {rows.length === 0 && (
               <tr>
-                <td colSpan={5} className="px-4 py-8 text-center text-muted-foreground">
+                <td colSpan={6} className="px-4 py-8 text-center text-muted-foreground">
                   No donations to publicise yet.
                 </td>
               </tr>
@@ -98,11 +99,10 @@ export function PublicationPanel({ orgId }: { orgId: string }) {
                   </td>
                   <td className="px-4 py-3">
                     <span
-                      className={`inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ${
-                        status === "published"
-                          ? "bg-verified-soft text-verified"
-                          : "bg-pending-soft text-pending-foreground"
-                      }`}
+                      className={`inline-block whitespace-nowrap rounded-full px-2.5 py-1 text-[11px] font-medium ${status === "published"
+                        ? "bg-verified-soft text-verified"
+                        : "bg-pending-soft text-pending-foreground"
+                        }`}
                     >
                       {PUBLICATION_STATUS_LABEL[status]}
                     </span>
@@ -112,31 +112,61 @@ export function PublicationPanel({ orgId }: { orgId: string }) {
                       </span>
                     )}
                   </td>
+                  <td className="px-4 py-3">
+                    {!pub ? (
+                      <span className="text-muted-foreground">
+                        Not checked
+                      </span>
+                    ) : pub.aiApproved ? (
+                      <span className="text-green-600 font-medium">
+                        AI Verified ✅
+                      </span>
+                    ) : (
+                      <span className="text-red-600 font-medium">
+                        Flagged by AI ⚠
+                      </span>
+                    )}
+                  </td>
                   <td className="max-w-[280px] px-4 py-3">
                     {pub ? (
                       <>
                         <span className="data-mono text-[11px] uppercase tracking-widest text-muted-foreground">
                           {PUBLICATION_TYPE_LABEL[pub.type]}
                         </span>
+
                         <a
                           href={pub.url}
                           target="_blank"
                           rel="noreferrer noopener"
                           className="mt-0.5 flex items-center gap-1 text-sm underline-offset-4 hover:underline"
                         >
-                          <span className="truncate">{linkHost(pub.url)}</span>
-                          <ExternalLink className="size-3 shrink-0" aria-hidden />
+                          <span className="truncate">
+                            {linkHost(pub.url)}
+                          </span>
+
+                          <ExternalLink className="size-3 shrink-0" />
                         </a>
+
                         {pub.caption && (
-                          <span className="mt-0.5 block text-xs text-muted-foreground">
+                          <span className="mt-1 block text-xs text-muted-foreground">
                             {pub.caption}
                           </span>
                         )}
+
+                        {pub.aiReason && (
+                          <div className="mt-2 text-xs text-blue-600">
+                            AI: {pub.aiReason}
+                          </div>
+                        )}
                       </>
                     ) : (
-                      <span className="text-muted-foreground">Not filed</span>
+                      <span className="text-muted-foreground">
+                        Not filed
+                      </span>
                     )}
                   </td>
+
+
                   <td className="px-4 py-3">
                     <span
                       className={`whitespace-nowrap text-xs ${accounted ? "text-verified" : "text-muted-foreground"}`}
@@ -184,9 +214,19 @@ export function PublicationPanel({ orgId }: { orgId: string }) {
           key={openFor}
           onCancel={() => setOpenFor(null)}
           onSubmit={async (draft) => {
+            const result = await validatePublicationWithAI(draft.url);
+
+            if (!result.approved) {
+              toast.error(result.reason);
+              return;
+            }
             await submitPublicationHashOnChain(openFor, draft);
-            await attachPublicationProof(openFor, { ...draft, submittedBy: org?.name });
-            setOpenFor(null);
+            await attachPublicationProof(openFor, {
+              ...draft,
+              submittedBy: org?.name,
+              aiApproved: true,
+              aiReason: result.reason,
+            }); setOpenFor(null);
             toast.success("Publication proof filed — this donation now shows as Published.");
           }}
           donationId={openFor}

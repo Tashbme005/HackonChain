@@ -2,22 +2,15 @@
 pragma solidity ^0.8.24;
 
 import "@openzeppelin/contracts/access/Ownable.sol";
+import "@openzeppelin/contracts/token/ERC20/IERC20.sol";
 
 /**
- * OpenImpact — on-chain donation accountability ledger (v1).
- *
- * Settlement (v1): native ETH escrow.
- * - Donor calls createDonation{value: amount}(organisation, recipient)
- * - ETH sits in this contract until the recipient calls confirmReceipt
- * - confirmReceipt releases the full escrowed amount to the recipient
- *
- * USDC / ERC-20 and donor anonymity flags are deferred to a later revision.
- *
- * Privacy: store only content hashes for proofs/publications — never names,
- * testimonials, or full media. Rich content lives in Supabase off-chain.
+ * @title TrustFlow (OpenImpact) — Transparent Donation Accountability Platform
+ * @notice Deployed on Base Sepolia Testnet. Handles USDC token escrow, recipient confirmation,
+ * recipient proof hash recording, and organisation publication hash recording.
  */
-contract OpenImpact is Ownable {
-    constructor(address initialOwner) Ownable(initialOwner) {}
+contract TrustFlow is Ownable {
+    IERC20 public immutable usdc;
 
     enum DonationStatus {
         Sent,
@@ -36,7 +29,7 @@ contract OpenImpact is Ownable {
         address donor;
         address organisation;
         address recipient;
-        uint256 amount;
+        uint256 amountUSDC;
         uint256 timestamp;
         DonationStatus status;
         string recipientProofHash;
@@ -63,19 +56,29 @@ contract OpenImpact is Ownable {
 
     event PublicationSubmitted(uint256 indexed donationId, string publicationHash);
 
-    event VerificationUpdated(uint256 indexed donationId);
+    event RecipientVerificationUpdated(uint256 indexed donationId, VerificationStatus status);
 
-    function createDonation(address organisation, address recipient) external payable {
-        require(msg.value > 0, "Donation must be greater than zero");
+    event PublicationVerificationUpdated(uint256 indexed donationId, VerificationStatus status);
+
+    constructor(address usdcAddress, address initialOwner) Ownable(initialOwner) {
+        require(usdcAddress != address(0), "Invalid USDC address");
+        usdc = IERC20(usdcAddress);
+    }
+
+    function createDonation(address organisation, address recipient, uint256 amount) external {
+        require(amount > 0, "Donation must be greater than zero");
         require(organisation != address(0), "Organisation required");
         require(recipient != address(0), "Recipient required");
+
+        // Escrow funds into contract via USDC transferFrom (requires prior approve)
+        require(usdc.transferFrom(msg.sender, address(this), amount), "USDC transfer failed");
 
         donations[nextDonationId] = Donation({
             id: nextDonationId,
             donor: msg.sender,
             organisation: organisation,
             recipient: recipient,
-            amount: msg.value,
+            amountUSDC: amount,
             timestamp: block.timestamp,
             status: DonationStatus.Sent,
             recipientProofHash: "",
@@ -84,7 +87,7 @@ contract OpenImpact is Ownable {
             publicationVerification: VerificationStatus.Pending
         });
 
-        emit DonationCreated(nextDonationId, msg.sender, organisation, recipient, msg.value);
+        emit DonationCreated(nextDonationId, msg.sender, organisation, recipient, amount);
 
         nextDonationId++;
     }
@@ -96,7 +99,8 @@ contract OpenImpact is Ownable {
 
         donation.status = DonationStatus.Received;
 
-        payable(donation.recipient).transfer(donation.amount);
+        // Transfer escrowed USDC tokens to recipient
+        require(usdc.transfer(donation.recipient, donation.amountUSDC), "USDC release failed");
 
         emit RecipientConfirmed(donationId);
     }
@@ -121,20 +125,20 @@ contract OpenImpact is Ownable {
         emit PublicationSubmitted(donationId, publicationHash);
     }
 
-    function verifyRecipientProof(uint256 donationId, VerificationStatus status) external onlyOwner {
+    function updateRecipientVerification(uint256 donationId, VerificationStatus status) external onlyOwner {
         donations[donationId].recipientVerification = status;
 
         if (status == VerificationStatus.Verified) {
             donations[donationId].status = DonationStatus.Verified;
         }
 
-        emit VerificationUpdated(donationId);
+        emit RecipientVerificationUpdated(donationId, status);
     }
 
-    function verifyPublication(uint256 donationId, VerificationStatus status) external onlyOwner {
+    function updatePublicationVerification(uint256 donationId, VerificationStatus status) external onlyOwner {
         donations[donationId].publicationVerification = status;
 
-        emit VerificationUpdated(donationId);
+        emit PublicationVerificationUpdated(donationId, status);
     }
 
     function getDonation(uint256 donationId) external view returns (Donation memory) {

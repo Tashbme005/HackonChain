@@ -48,7 +48,7 @@ import {
 
 export type { RecipientInvite };
 
-const STORAGE_KEY = "openimpact.state.v8";
+const STORAGE_KEY = "openimpact.state.v9";
 
 export type Role = "donor" | "recipient" | "organisation";
 
